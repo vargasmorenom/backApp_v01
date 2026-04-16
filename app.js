@@ -21,21 +21,59 @@ require("./config/database");
 // Middleware personalizado
 const validaToken = require("./middlewares/validaToken");
 const verifyRecaptcha = require("./middlewares/verifyRecaptcha");
-const { recuperarPendientes } = require("./helpers/mailLibs");
+const validaAdmin = require("./middlewares/validaAdmin");
+const { recuperarPendientes, iniciarPoller } = require("./helpers/mailLibs");
 
 const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 10,
+    message: { error: 'Demasiados intentos de inicio de sesión. Intenta de nuevo en 15 minutos.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const registerLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hora
+    max: 5,
+    message: { error: 'Demasiados registros desde esta IP. Intenta de nuevo en una hora.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const refreshLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 30,
+    message: { error: 'Demasiadas solicitudes de refresco de sesión.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
 // App principal
 const app = express();
 app.use(helmet());
 
 const httpServer = http.createServer(app);
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
+  : ['http://localhost:8100', 'http://localhost:4200'];
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true,
+};
+
 const io = new Server(httpServer, {
-  cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:8100',
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true
-  }
+  cors: { ...corsOptions, origin: allowedOrigins },
 });
 
 // Guardar io en app para usarlo en rutas
@@ -44,11 +82,7 @@ initSockets(io);
 
 // --- Middlewares globales ---
 app.use(cookieParser());
-app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:8100',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true
-}));
+app.use(cors(corsOptions));
 app.use((req, res, next) => {
     if (req.is('application/json')) {
         express.json()(req, res, next);
@@ -57,7 +91,10 @@ app.use((req, res, next) => {
     }
 });
 app.use(express.urlencoded({ extended: true }));
-app.use('/files', express.static(path.join(__dirname, "files")));
+app.use('/files', (req, res, next) => {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    next();
+}, express.static(path.join(__dirname, "files")));
 
 app.use(session({
     secret: process.env.SESSION_SECRET || "salida en codigo",
@@ -77,13 +114,27 @@ app.use(morgan('combined', { stream: { write: message => logger.info(message) } 
 
 const apiVersion = "/api/v1";
 
+// ── Rutas admin ───────────────────────────────────────────────────────────────
+app.use(apiVersion + "/admin/mail-queue", validaAdmin, require('./routes/admin/mailQueueRoutes'));
+
 // ── Rutas públicas sin reCAPTCHA ──────────────────────────────────────────────
-app.use(apiVersion + "/activacion", require('./routes/auth/activacionRoutes'));
-app.use(apiVersion + "/refresh",    require('./routes/auth/refreshTokenRoute'));
+app.use(apiVersion + "/activacion",   require('./routes/auth/activacionRoutes'));
+app.use(apiVersion + "/refresh",      refreshLimiter, require('./routes/auth/refreshTokenRoute'));
+app.use(apiVersion + "/getpost",      require('./routes/posts/getPostRoutes'));
+app.use(apiVersion + "/getonepost",   require('./routes/posts/getOnePostRoutes'));
+app.use(apiVersion + "/getpostid",    require('./routes/posts/getPostIdRoutes'));
+app.use(apiVersion + "/getprofile",   require('./routes/profile/getProfileRoutes'));
+app.use(apiVersion + "/getfollow",    require('./routes/social/GetFollowRoutes'));
+app.use(apiVersion + "/profilelikes", require('./routes/social/LikeProfileRoutes').router || require('./routes/social/LikeProfileRoutes'));
+app.use(apiVersion + "/getLikes",     require('./routes/social/getLikeStatusRoutes'));
+app.use(apiVersion + "/postsbytag",   require('./routes/posts/getPostsByTagRoutes'));
+app.use(apiVersion + "/trendingtags", require('./routes/posts/getTrendingTagsRoutes'));
+app.use(apiVersion + "/search",       require('./routes/posts/getPostsBySearchRoutes'));
+app.use(apiVersion + "/getviewpost",  require('./routes/posts/getViewPostRoutes'));
 
 // ── Rutas públicas con reCAPTCHA ──────────────────────────────────────────────
-app.use(apiVersion + "/register",   verifyRecaptcha, require('./routes/auth/registerRoutes'));
-app.use(apiVersion + "/login",      verifyRecaptcha, require('./routes/auth/loginRoutes'));
+app.use(apiVersion + "/register",   registerLimiter, verifyRecaptcha, require('./routes/auth/registerRoutes'));
+app.use(apiVersion + "/login",      loginLimiter,    verifyRecaptcha, require('./routes/auth/loginRoutes'));
 app.use(apiVersion + "/recovery",   verifyRecaptcha, require('./routes/auth/recoveryRoutes'));
 
 // ── Middleware de autenticación global ────────────────────────────────────────
@@ -141,4 +192,5 @@ protectedRoutes.forEach(route => app.use(route.path, route.router));
 httpServer.listen(process.env.PORT || 3000, () => {
     console.log(dta.message + ':' + (process.env.PORT || 3000));
     recuperarPendientes();
+    iniciarPoller();
 });

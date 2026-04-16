@@ -1,8 +1,6 @@
 const express = require('express');
 const upload = require('../../helpers/uploadImagen');
 const helperImg = require('../../helpers/imagenHelper');
-const addHashToWords = require('../../helpers/addHashToWords');
-
 const cutTitle = require('../../helpers/limpiarTituloImagenes');
 const fs = require('fs/promises');
 
@@ -13,13 +11,22 @@ const TagsPost = require('../../models/TagsPost');
 const router = express.Router();
 
 
-router.post("/",upload.single('imagen'), async (req, res) => {
+router.post("/", (req, res, next) => {
+    upload.single('imagen')(req, res, (err) => {
+        if (err) {
+            const msg = err.code === 'LIMIT_FILE_SIZE'
+                ? 'La imagen no debe superar 2 MB.'
+                : err.code === 'LIMIT_FILE_TYPE'
+                ? 'Solo se permiten imágenes JPG o PNG.'
+                : 'Error al procesar la imagen.';
+            return res.status(400).json({ message: msg });
+        }
+        next();
+    });
+}, async (req, res) => {
 
     try {
 
-      const filePath = req.file.path; 
-      const namePicture = cutTitle(req.file.filename);
-    
       const {
         name,
         description,
@@ -33,12 +40,6 @@ router.post("/",upload.single('imagen'), async (req, res) => {
         postedBy,
         forKids,
       } = req.body;
- 
-  
-      // Validar campos obligatorios
-      if (!req.file) {
-        return res.status(400).json({ error: 'No se subió ninguna imagen.' });
-      }
 
       if (!name || !typePost || !access || !postedBy) {
         return res.status(400).json({ message: "Faltan campos obligatorios" });
@@ -86,29 +87,41 @@ router.post("/",upload.single('imagen'), async (req, res) => {
 
        
     // manejo de las imagenes
-    const imagenes = {
-      small: `640-${namePicture}.png`,
-      medium: `1280-${namePicture}.png`,
-      large: `1920-${namePicture}.png`
-    };
-   
+    const baseUrl = process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
+    let imagenes;
 
-    // Procesamiento en paralelo
-    await Promise.all([
-      helperImg(filePath, `640-${namePicture}`, 'small','fit','landscape'),
-      helperImg(filePath, `1280-${namePicture}`, 'medium','fit','landscape'),
-      helperImg(filePath, `1920-${namePicture}`, 'large','fit','landscape')
-    ]);
-  
-     await fs.unlink(filePath);
-  
-   //  Crear el Post
-      const nuevoPost = await Post.create({
+    if (req.file) {
+      const filePath = req.file.path;
+      const namePicture = cutTitle(req.file.filename);
+
+      await Promise.all([
+        helperImg(filePath, `640-${namePicture}`, 'small', 'fit', 'landscape'),
+        helperImg(filePath, `1280-${namePicture}`, 'medium', 'fit', 'landscape'),
+        helperImg(filePath, `1920-${namePicture}`, 'large', 'fit', 'landscape'),
+      ]);
+
+      fs.unlink(filePath).catch(e => console.warn('[upload] No se pudo eliminar temporal:', e.message));
+
+      imagenes = {
+        small:  `${baseUrl}/files/640-${namePicture}.png`,
+        medium: `${baseUrl}/files/1280-${namePicture}.png`,
+        large:  `${baseUrl}/files/1920-${namePicture}.png`,
+      };
+    } else {
+      imagenes = {
+        small:  `${baseUrl}/files/640-default.png`,
+        medium: `${baseUrl}/files/1280-default.png`,
+        large:  `${baseUrl}/files/1920-default.png`,
+      };
+    }
+
+    // Crear el Post
+      await Post.create({
         name,
         description,
         typePost,
         typePostName: typePost == 1 ? "Twitter or X" : typePost == 2 ? "Facebook" : typePost == 3 ? "Instagram" : typePost == 4 ? "TikTok" : typePost == 5 ? "Youtube" : "Linkedin",
-        imagen : imagenes,
+        imagen : [imagenes],
         tags : newdatarag,
         access,
         profileId,

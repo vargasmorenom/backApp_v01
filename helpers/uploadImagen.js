@@ -4,7 +4,7 @@ const path = require('path');
 // Configurar almacenamiento en disco
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'images/'); // carpeta temporal
+    cb(null, path.join(__dirname, '../images/')); // ruta absoluta
   },
   filename: function (req, file, cb) {
     console.log("upload");

@@ -13,8 +13,8 @@ router.put("/", async (req, res) => {
     
     // Extracción de datos del cuerpo de la solicitud
     const {
-      firstname,
-      lastname,
+      firstName,
+      lastName,
       email,
       location,
       phoneNumber,
@@ -111,11 +111,11 @@ router.put("/", async (req, res) => {
     }
     
     //Crear el nuevo perfil
-    const updatedProfile = await Profile.findOneAndUpdate(
+    await Profile.findOneAndUpdate(
         { userBy },
     {
-      firstname,
-      lastname,
+      firstName,
+      lastName,
       email,
       location,
       phoneNumber,

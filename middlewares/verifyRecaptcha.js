@@ -8,6 +8,11 @@ const RECAPTCHA_SECRET = process.env.RECAPTCHA_SECRET;
  * Rechaza con 400 si el token falta o es inválido.
  */
 async function verifyRecaptcha(req, res, next) {
+    if (!RECAPTCHA_SECRET) {
+        console.error('[reCAPTCHA] RECAPTCHA_SECRET no está configurado. Petición bloqueada.');
+        return res.status(503).json({ error: 'Servicio no disponible temporalmente.' });
+    }
+
     const token = req.body?.recaptchaToken || req.query?.recaptchaToken;
 
     if (!token) {

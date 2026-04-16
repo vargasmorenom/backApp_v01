@@ -58,7 +58,7 @@ router.put("/", async (req, res) => {
            }
          
            
-       dataContent = {
+       const dataContent = {
           id: idvideo[0],
           urltik: urlcode,
           tipo: arrayDeCadenas[4],

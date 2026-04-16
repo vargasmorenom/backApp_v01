@@ -33,7 +33,7 @@ router.put("/", async (req, res) => {
    
     try {
 
-    const { postId, url, typePost } = req.body;
+    const { postId, url, typePost, titulo } = req.body;
 
     const twitterRegex = /^(https?:\/\/)?(www\.)?(twitter\.com|x\.com)\/(\w+)\/status\/(\d+)(\?.*)?$/;
  
@@ -64,6 +64,8 @@ router.put("/", async (req, res) => {
           return res.status(201).json({ message: "El post ya contiene este contenido" });
         }
       
+       arrayDeCadenas.titulo = titulo || null;
+
        const updatedPost = await Post.findByIdAndUpdate(
 
         postId,{

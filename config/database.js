@@ -1,25 +1,29 @@
-const mongose = require("mongoose");
-class Database{
+const mongoose = require("mongoose");
 
-    dbUri = process.env.MONGODB_URI || "mongodb://localhost/ListyFybd1";
+class Database {
 
-    constructor(){
+    constructor() {
+        this.dbUri = process.env.MONGODB_URI;
         this.connect();
     }
 
-    connect(){
-        mongose.connect(this.dbUri,{
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-           
-        })
-        .then(()=>{
-        console.log("conexcion OK");
-        })
-        .catch((err) =>{
-        console.log("conexcion " + err);
-        })
+    connect() {
+        if (!this.dbUri) {
+            console.error("ERROR: MONGODB_URI no está definida. Verifica el archivo .env");
+            process.exit(1);
+        }
 
+        mongoose.connect(this.dbUri, {
+            serverSelectionTimeoutMS: 10000,
+        })
+        .then(() => {
+            console.log("Conexión a MongoDB OK");
+        })
+        .catch((err) => {
+            console.error("Error de conexión a MongoDB:", err.message);
+            process.exit(1);
+        });
     }
 }
+
 module.exports = new Database();

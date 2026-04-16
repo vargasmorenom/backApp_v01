@@ -22,7 +22,7 @@ router.put("/", async (req, res) => {
     try {
 
 
-    const { postId, url, typePost } = req.body;
+    const { postId, url, typePost, titulo } = req.body;
 
     const instagramRegex = /^(https?:\/\/)?(www\.)?(instagram\.com\/(p|reel|stories|tv)\/[\w-]+\/?(?:\?.*)?|instagr\.am\/(p|reel|stories|tv)\/[\w-]+\/?(?:\?.*)?)$/
 
@@ -65,9 +65,10 @@ router.put("/", async (req, res) => {
       const dataContent = {
 
           url: url,
-          id: arrayDeCadenas
+          id: arrayDeCadenas,
+          titulo: titulo || null
 
-        } 
+        }
         
 
        const updatedPost = await Post.findByIdAndUpdate(
