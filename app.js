@@ -2,7 +2,6 @@ const express = require('express');
 const path = require('path');
 const session = require("express-session");
 const cookieParser = require('cookie-parser');
-const config = require('node-yaml');
 const cors = require('cors');
 const dotenv = require("dotenv");
 const morgan = require('morgan');
@@ -13,8 +12,6 @@ const initSockets = require("./libs/socket/orquestador.socket");
 
 // Variables de entorno
 dotenv.config({ path: './.env' });
-const dta = config.readSync(__dirname + '/config.yaml');
-
 // Conexión a base de datos
 require("./config/database");
 
@@ -190,7 +187,7 @@ const protectedRoutes = [
 protectedRoutes.forEach(route => app.use(route.path, route.router));
 
 httpServer.listen(process.env.PORT || 3000, () => {
-    console.log(dta.message + ':' + (process.env.PORT || 3000));
+    console.log('Servidor iniciado en el puerto:' + (process.env.PORT || 3000));
     recuperarPendientes();
     iniciarPoller();
 });
