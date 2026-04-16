@@ -18,7 +18,7 @@ router.put("/", async (req, res) => {
     try {
 
 
-    const { postId, url, typePost } = req.body;
+    const { postId, url, typePost, titulo } = req.body;
 
     const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/|shorts\/)|youtu\.be\/)[a-zA-Z0-9_-]{11}(\?.*)?$/;
 
@@ -50,16 +50,19 @@ router.put("/", async (req, res) => {
       const arrayDeCadenas = extractYouTubeId(url);
 
 
-      if(consultaPost.contentVal.includes(arrayDeCadenas)){
+      const yaExiste = consultaPost.content?.some(item => item?.id === arrayDeCadenas);
+      if (yaExiste) {
         return res.status(201).json({ message: "El post ya contiene este contenido" });
       }
     
       const dataContent = {
 
           url: url,
-          id: arrayDeCadenas
+          id: arrayDeCadenas,
+          thumbnail: `https://img.youtube.com/vi/${arrayDeCadenas}/mqdefault.jpg`,
+          titulo: titulo || null
 
-        } 
+        }
         
 
        const updatedPost = await Post.findByIdAndUpdate(
@@ -67,9 +70,7 @@ router.put("/", async (req, res) => {
         postId,{
 
                 $push:{
-                  content: dataContent,
-                  contentVal: arrayDeCadenas
-                
+                  content: dataContent
                 }
 
             },

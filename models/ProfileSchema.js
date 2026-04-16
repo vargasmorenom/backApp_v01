@@ -29,8 +29,8 @@ const profileSchema = new Schema({
     },
     description: {
         type: String,
-        required: true,
         trim: true,
+        default: '',
     },
     linksString: {
         type: String,

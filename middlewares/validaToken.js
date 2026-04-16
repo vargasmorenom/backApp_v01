@@ -5,7 +5,7 @@ const upsertRefreshToken = require('../helpers/adminTokenRefresh');
 const adminTokens = require('../helpers/adminTokens');
 const compressBase64 = require('../helpers/copressBase64');
 
-const JWT_SECRET = process.env.TZT;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const validaToken = async (req, res, next) => {
     try {
@@ -67,7 +67,7 @@ const validaToken = async (req, res, next) => {
                 const newSessionData = { valida: refres.codeInterno, token: newAccessToken };
                 const compressedData = await compressBase64(newSessionData);
 
-                res.cookie('AuthToken', compressedData, { httpOnly: true, secure: true, sameSite: "Lax" });
+                res.cookie('AuthToken', compressedData, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: "Lax" });
                 
                 // Actualizar request actual
                 req.cookies.AuthToken = compressedData;

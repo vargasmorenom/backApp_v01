@@ -28,7 +28,7 @@ function extractTelegramInfo(url) {
 
 router.put("/", async (req, res) => {
     try {
-        const { postId, url, typePost } = req.body;
+        const { postId, url, typePost, titulo } = req.body;
 
         if (!postId || !url || !typePost) {
             return res.status(400).json({ message: "Datos incompletos" });
@@ -50,6 +50,8 @@ router.put("/", async (req, res) => {
         if (existe) {
             return res.status(201).json({ message: "El post ya contiene este contenido" });
         }
+
+        telegramInfo.titulo = titulo || null;
 
         const updatedPost = await Post.findByIdAndUpdate(
             postId,

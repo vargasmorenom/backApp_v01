@@ -81,6 +81,9 @@ async function procesarQueue() {
 
 // ── Recuperar pendientes al arrancar ─────────────────────────────────────────
 
+const POLL_INTERVAL = 60 * 1000; // cada 60 segundos
+let pollerActivo = false;
+
 async function recuperarPendientes() {
     try {
         const pendientes = await EmailQueue.countDocuments({
@@ -95,6 +98,37 @@ async function recuperarPendientes() {
     } catch (err) {
         console.error('[Mail] Error al recuperar pendientes:', err.message);
     }
+}
+
+function iniciarPoller() {
+    if (pollerActivo) return;
+    pollerActivo = true;
+    setInterval(async () => {
+        try {
+            const hay = await EmailQueue.exists({
+                status:   'pending',
+                attempts: { $lt: MAX_RETRIES },
+            });
+            if (hay) {
+                console.log('[Mail] Poller: correos pendientes encontrados, procesando...');
+                procesarQueue();
+            }
+        } catch (err) {
+            console.error('[Mail] Error en poller:', err.message);
+        }
+    }, POLL_INTERVAL);
+    console.log(`[Mail] Poller iniciado (cada ${POLL_INTERVAL / 1000}s)`);
+}
+
+// ── Estado del queue ──────────────────────────────────────────────────────────
+
+async function estadoQueue() {
+    const [pending, sent, failed] = await Promise.all([
+        EmailQueue.countDocuments({ status: 'pending' }),
+        EmailQueue.countDocuments({ status: 'sent' }),
+        EmailQueue.countDocuments({ status: 'failed' }),
+    ]);
+    return { pending, sent, failed, total: pending + sent + failed };
 }
 
 // ── Encolar correo ────────────────────────────────────────────────────────────
@@ -156,6 +190,8 @@ function sleep(ms) {
 
 module.exports = {
     recuperarPendientes,
+    iniciarPoller,
+    estadoQueue,
     enviarCorreoVerificacion,
     enviarCorreoRecuperacion,
     enviarCorreoConfirmacionPassword,

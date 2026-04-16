@@ -2,13 +2,13 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const sharp = require('sharp');
-const axios = require('axios');
 const path = require('path');
 const fs = require('fs/promises');
+const Profile = require('../../models/ProfileSchema');
 
 // Configuración Multer con validación de tipo de archivo
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, './files'),
+  destination: (req, file, cb) => cb(null, path.join(__dirname, '../../images/')),
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
     cb(null, `${Date.now()}${ext}`);
@@ -39,10 +39,11 @@ const helperImg = async (filePath, fileName, size) => {
   const left = Math.floor((metadata.width - squareSize) / 2);
   const top = Math.floor((metadata.height - squareSize) / 2);
 
+  const outputPath = path.join(__dirname, `../../files/${fileName}.png`);
   await image
     .extract({ width: squareSize, height: squareSize, left, top })
     .resize(size, size)
-    .toFile(`./files/${fileName}.png`);
+    .toFile(outputPath);
 };
 
 // Ruta POST para subir imagen
@@ -60,10 +61,11 @@ router.post('/', upload.single('imagen'), async (req, res) => {
       return res.status(400).json({ error: 'Faltan datos requeridos: userBy o usuario' });
     }
 
+    const baseUrl = process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
     const profilePic = {
-      small: `60-${userId}.png`,
-      medium: `300-${userId}.png`,
-      large: `600-${userId}.png`
+      small:  `${baseUrl}/files/60-${userId}.png`,
+      medium: `${baseUrl}/files/300-${userId}.png`,
+      large:  `${baseUrl}/files/600-${userId}.png`,
     };
 
     // Procesamiento en paralelo
@@ -73,17 +75,15 @@ router.post('/', upload.single('imagen'), async (req, res) => {
       helperImg(filePath, `60-${userId}`, 60)
     ]);
 
-    // (Opcional) Borrar imagen original para no llenar el disco
-    await fs.unlink(filePath);
+    fs.unlink(filePath).catch(e => console.warn('[profileImg] No se pudo eliminar temporal:', e.message));
 
-    // Enviar datos al endpoint externo
-    const data = { profilePic, userBy: userId, usuario, isInternalRequest: true };
-    const perfilCreate = await axios.put(`${process.env.URL_UPDATE_PROFILE || 'http://localhost:3000/api/v1/updateprofileimage'}`, data
-    );
+    // Actualizar perfil directamente sin pasar por la ruta protegida
+    await Profile.findOneAndUpdate({ userBy: userId }, { profilePic });
+    const perfilUpdated = await Profile.findOne({ userBy: userId });
 
-    res.status(200).json({ 
-      message: 'Imagen cargada, procesada y perfil actualizado correctamente', 
-      perfilCreate: perfilCreate.data 
+    res.status(200).json({
+      message: 'Imagen cargada, procesada y perfil actualizado correctamente',
+      perfilCreate: { perfilUpdated }
     });
 
   } catch (err) {

@@ -29,7 +29,18 @@ router.get("/", async (req,res) => {
         .limit(limit)
         .exec();
 
-        res.status(200).json(items);
+        const defaultPic = { small: null, medium: null, large: null };
+
+        const result = items.map(item => {
+            const obj = item.toObject();
+            if (obj.profileId && (!obj.profileId.profilePic || obj.profileId.profilePic.length === 0)) {
+                obj.profileId.profilePic = [defaultPic];
+            }
+            return obj;
+        });
+
+        console.log('[getPost] primer item imagen:', JSON.stringify(result[0]?.imagen));
+        res.status(200).json(result);
 
     } catch(error){
         console.error("Error in getPost:", error); // Log internal error

@@ -15,7 +15,7 @@ router.put("/", async (req, res) => {
     try {
 
 
-    const { postId, url, typePost } = req.body;
+    const { postId, url, typePost, titulo } = req.body;
 
      const linkidRegex = /^(https?:\/\/)?(www\.)?linkedin\.com\/.*$/;
 
@@ -50,8 +50,9 @@ router.put("/", async (req, res) => {
     
       const dataContent = {
           url: url,
-          idpost: arrayDeCadenas
-        } 
+          idpost: arrayDeCadenas,
+          titulo: titulo || null
+        }
         
 
        const updatedPost = await Post.findByIdAndUpdate(

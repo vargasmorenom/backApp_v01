@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const decompressBase64 = require('../../helpers/decompressBase64');
 
-const JWT_SECRET = process.env.TZT;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 function parseCookies(cookieHeader) {
     const cookies = {};

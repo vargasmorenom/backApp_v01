@@ -12,7 +12,7 @@ require('dotenv').config({ path: './.env' });
 const { MongoClient } = require('mongodb');
 
 const MONGODB_URI = process.env.MONGODB_URI;
-const DB_NAME     = 'ListyFy';
+const DB_NAME     = 'Listybdv01';
 
 if (!MONGODB_URI) {
     console.error('ERROR: MONGODB_URI no está definido en .env');

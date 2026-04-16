@@ -42,7 +42,7 @@ router.post("/", async (req, res) => {
         const refres = await upsertRefreshToken(storedToken.user, storedToken.token);
 
         // 6. Generar un nuevo Access Token (30 minutos)
-        const newAccessToken = await adminTokens(storedToken.user, '30m', null, process.env.TZT);
+        const newAccessToken = await adminTokens(storedToken.user, '30m', null, process.env.JWT_SECRET);
 
         // 7. Actualizar la cookie con el nuevo Access Token y el nuevo codeInterno
         const newSessionData = {
@@ -54,7 +54,7 @@ router.post("/", async (req, res) => {
 
         res.cookie('AuthToken', compressedData, {
             httpOnly: true,
-            secure: true, // Cambiar a true si usas HTTPS
+            secure: process.env.NODE_ENV === 'production',
             sameSite: "Lax"
         });
 
