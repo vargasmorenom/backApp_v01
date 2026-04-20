@@ -112,6 +112,8 @@ app.use(morgan('combined', { stream: { write: message => logger.info(message) } 
 
 const apiVersion = "/api/v1";
 
+app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+
 // ── Rutas admin ───────────────────────────────────────────────────────────────
 app.use(apiVersion + "/admin/mail-queue", validaAdmin, require('./routes/admin/mailQueueRoutes'));
 
@@ -187,8 +189,8 @@ const protectedRoutes = [
 ];
 protectedRoutes.forEach(route => app.use(route.path, route.router));
 
-httpServer.listen(process.env.PORT || 3000, () => {
-    console.log('Servidor iniciado en el puerto:' + (process.env.PORT || 3000));
+httpServer.listen(process.env.PORT || 8080, () => {
+    console.log('Servidor iniciado en el puerto:' + (process.env.PORT || 8080));
     recuperarPendientes();
     iniciarPoller();
 });
