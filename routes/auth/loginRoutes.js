@@ -68,10 +68,11 @@ router.post("/", async (req, res) => {
         perfil
     };
     
+    const isProd = process.env.NODE_ENV === 'production';
     res.cookie('AuthToken', compressedData, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: "Lax",
+        secure: isProd,
+        sameSite: isProd ? "None" : "Lax",
     });
 
     return res.status(200).json(responsedata);
