@@ -11,7 +11,8 @@ const { Server } = require("socket.io");
 const initSockets = require("./libs/socket/orquestador.socket");
 
 // Variables de entorno
-dotenv.config({ path: './.env' });
+const envFile = process.env.NODE_ENV === 'production' ? '.env' : `.env.${process.env.NODE_ENV || 'development'}`;
+dotenv.config({ path: `./${envFile}` });
 // Conexión a base de datos
 require("./config/database");
 
