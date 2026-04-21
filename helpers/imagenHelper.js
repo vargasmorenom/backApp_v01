@@ -44,7 +44,7 @@ const helperImg = async (filePath, fileName, sizeType = 'medium',modo,ratioType)
 
     const outputSize = (sizes[ratioType] && sizes[ratioType][sizeType]) || sizes.photo.medium;
 
-    const outputFilePath = path.resolve(__dirname, `../files/${namePicture}.png`);
+    const outputFilePath = `/files/${namePicture}.png`;
 
 
     // Asegurar que el directorio existe

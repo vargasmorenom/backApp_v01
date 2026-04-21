@@ -19,13 +19,13 @@ const helperImg = async (filePath, fileName, size = 300) => {
     .extract({ width: squareSize, height: squareSize, left, top }) // recorte centrado
     .resize(size, size) // redimensionar al tamaño deseado
     .jpeg({ quality: 85 })
-    .toFile(`./files/${fileName}.jpg`);
+    .toFile(`/files/${fileName}.jpg`);
 };
 
 
 const storage = multer.diskStorage({
     destination:(req, file, cb)=>{
-        cb(null,'./files') 
+        cb(null,'/files') 
     },
     filename: (req, file, cb) => {
         const ext = file.originalname.split('.').pop();

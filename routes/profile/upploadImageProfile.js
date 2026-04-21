@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs/promises');
 const Profile = require('../../models/ProfileSchema');
 
-const FILES_DIR = process.env.FILES_PATH || path.join(__dirname, '../../files');
+const FILES_DIR = process.env.FILES_PATH || '/files';
 
 // Configuración Multer con validación de tipo de archivo
 const storage = multer.diskStorage({
