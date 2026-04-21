@@ -72,7 +72,7 @@ router.post("/", async (req, res) => {
     res.cookie('AuthToken', compressedData, {
         httpOnly: true,
         secure: isProd,
-        sameSite: isProd ? "None" : "Lax",
+        sameSite: "Lax",
     });
 
     return res.status(200).json(responsedata);
