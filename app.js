@@ -117,7 +117,7 @@ const logger = winston.createLogger({
 
 app.use(morgan('combined', { stream: { write: message => logger.info(message) } }));
 
-const apiVersion = "/api/v1";
+const apiVersion = process.env.API_VERSION || "/api/v1";
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
