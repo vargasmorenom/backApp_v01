@@ -39,10 +39,11 @@ const helperImg = async (filePath, fileName, size) => {
   const left = Math.floor((metadata.width - squareSize) / 2);
   const top = Math.floor((metadata.height - squareSize) / 2);
 
-  const outputPath = path.join(__dirname, `/files/${fileName}.png`);
+  const outputPath = path.join(__dirname, `../../files/${fileName}.jpg`);
   await image
     .extract({ width: squareSize, height: squareSize, left, top })
     .resize(size, size)
+    .jpeg({ quality: 85 })
     .toFile(outputPath);
 };
 
@@ -62,9 +63,9 @@ router.post('/', upload.single('imagen'), async (req, res) => {
     }
 
     const profilePic = {
-      small:  `60-${userId}.png`,
-      medium: `300-${userId}.png`,
-      large:  `600-${userId}.png`,
+      small:  `60-${userId}.jpg`,
+      medium: `300-${userId}.jpg`,
+      large:  `600-${userId}.jpg`,
     };
 
     // Procesamiento en paralelo
