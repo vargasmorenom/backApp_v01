@@ -6,9 +6,11 @@ const path = require('path');
 const fs = require('fs/promises');
 const Profile = require('../../models/ProfileSchema');
 
+const FILES_DIR = process.env.FILES_PATH || path.join(__dirname, '../../files');
+
 // Configuración Multer con validación de tipo de archivo
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.join(__dirname, '../../files/')),
+  destination: (req, file, cb) => cb(null, FILES_DIR),
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
     cb(null, `${Date.now()}${ext}`);
@@ -39,7 +41,7 @@ const helperImg = async (filePath, fileName, size) => {
   const left = Math.floor((metadata.width - squareSize) / 2);
   const top = Math.floor((metadata.height - squareSize) / 2);
 
-  const outputPath = path.join(__dirname, `../../files/${fileName}.jpg`);
+  const outputPath = path.join(FILES_DIR, `${fileName}.jpg`);
   await image
     .extract({ width: squareSize, height: squareSize, left, top })
     .resize(size, size)
