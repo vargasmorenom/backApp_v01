@@ -8,7 +8,7 @@ const Profile = require('../../models/ProfileSchema');
 
 // Configuración Multer con validación de tipo de archivo
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.join(__dirname, '../../images/')),
+  destination: (req, file, cb) => cb(null, path.join(__dirname, '../../files/')),
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
     cb(null, `${Date.now()}${ext}`);

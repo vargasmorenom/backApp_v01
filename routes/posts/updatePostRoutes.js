@@ -14,7 +14,7 @@ const router = express.Router();
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'images/');
+    cb(null, 'files/');
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -70,16 +70,15 @@ const helperImg = async (filePath, fileName, sizeType) => {
   // Si no existe el tamaño, usar 'medium' como predeterminado
   const outputSize = sizes[sizeType] || sizes['medium'];
 
-  // Ruta de salida con extensión .png
-  const outputFilePath = path.resolve(__dirname, `../../files/${fileName}.png`);
+  const outputFilePath = path.resolve(__dirname, `../../files/${fileName}.jpg`);
 
   await image
-    .extract({ width: newWidth, height: newHeight, left, top }) // Recorte centrado 16:9
-    .resize(outputSize.width, outputSize.height,{
-      fit: 'cover',  // Hace zoom y recorta para llenar todo
-      position: 'centre' // Centrado
-    })               // Redimensionar
-    .png({ compressionLevel: 7 })   // Comprimir PNG al máximo (sin pérdida)
+    .extract({ width: newWidth, height: newHeight, left, top })
+    .resize(outputSize.width, outputSize.height, {
+      fit: 'cover',
+      position: 'centre'
+    })
+    .jpeg({ quality: 85 })
     .toFile(outputFilePath);
 
   
@@ -172,9 +171,9 @@ router.put("/",upload.single('imagen'), async (req, res) => {
         description,
         typePost,
         imagen: req.file !== undefined ? {
-          small: `640-${namePicture}.png`,
-          medium: `1280-${namePicture}.png`,
-          large: `1920-${namePicture}.png`
+          small: `640-${namePicture}.jpg`,
+          medium: `1280-${namePicture}.jpg`,
+          large: `1920-${namePicture}.jpg`
         } : postData.imagen,
         tags: processedTags !== undefined ? processedTags : postData.tags,
         access,

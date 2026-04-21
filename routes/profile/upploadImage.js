@@ -18,7 +18,8 @@ const helperImg = async (filePath, fileName, size = 300) => {
   return image
     .extract({ width: squareSize, height: squareSize, left, top }) // recorte centrado
     .resize(size, size) // redimensionar al tamaño deseado
-    .toFile(`./images/${fileName}.png`);
+    .jpeg({ quality: 85 })
+    .toFile(`./files/${fileName}.jpg`);
 };
 
 

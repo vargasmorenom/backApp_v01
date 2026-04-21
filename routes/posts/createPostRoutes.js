@@ -102,15 +102,15 @@ router.post("/", (req, res, next) => {
       fs.unlink(filePath).catch(e => console.warn('[upload] No se pudo eliminar temporal:', e.message));
 
       imagenes = {
-        small:  `640-${namePicture}.png`,
-        medium: `1280-${namePicture}.png`,
-        large:  `1920-${namePicture}.png`,
+        small:  `640-${namePicture}.jpg`,
+        medium: `1280-${namePicture}.jpg`,
+        large:  `1920-${namePicture}.jpg`,
       };
     } else {
       imagenes = {
-        small:  `640-default.png`,
-        medium: `1280-default.png`,
-        large:  `1920-default.png`,
+        small:  `640-default.jpg`,
+        medium: `1280-default.jpg`,
+        large:  `1920-default.jpg`,
       };
     }
 

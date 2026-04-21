@@ -13,7 +13,7 @@ const router = express.Router();
 app.use(bodyParser.urlencoded( { extended: false } ));
 
 const helperImg = (filePath, fileName, size = 300) =>{
-    return sharp(filePath).resize(size).toFile(`./images/${fileName}.png`)
+    return sharp(filePath).resize(size).jpeg({ quality: 85 }).toFile(`./files/${fileName}.jpg`)
 }
 
 const storage = multer.diskStorage({
