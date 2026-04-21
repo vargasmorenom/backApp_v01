@@ -31,7 +31,6 @@ const loginLimiter = rateLimit({
     message: { error: 'Demasiados intentos de inicio de sesión. Intenta de nuevo en 15 minutos.' },
     standardHeaders: true,
     legacyHeaders: false,
-    trustProxy: true,
 });
 
 const registerLimiter = rateLimit({
@@ -40,7 +39,6 @@ const registerLimiter = rateLimit({
     message: { error: 'Demasiados registros desde esta IP. Intenta de nuevo en una hora.' },
     standardHeaders: true,
     legacyHeaders: false,
-    trustProxy: true,
 });
 
 const refreshLimiter = rateLimit({
@@ -49,7 +47,6 @@ const refreshLimiter = rateLimit({
     message: { error: 'Demasiadas solicitudes de refresco de sesión.' },
     standardHeaders: true,
     legacyHeaders: false,
-    trustProxy: true,
 });
 
 // App principal
