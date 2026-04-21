@@ -9,12 +9,14 @@ const TagsPost = require('../../models/TagsPost');
 const cutTitle = require('../../helpers/limpiarTituloImagenes');
 
 
+const FILES_DIR = process.env.FILES_PATH || '/files';
+
 const router = express.Router();
 
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'files/');
+    cb(null, FILES_DIR);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -70,7 +72,7 @@ const helperImg = async (filePath, fileName, sizeType) => {
   // Si no existe el tamaño, usar 'medium' como predeterminado
   const outputSize = sizes[sizeType] || sizes['medium'];
 
-  const outputFilePath = path.resolve(__dirname, `../../files/${fileName}.jpg`);
+  const outputFilePath = path.join(FILES_DIR, `${fileName}.jpg`);
 
   await image
     .extract({ width: newWidth, height: newHeight, left, top })
@@ -151,7 +153,16 @@ router.put("/",upload.single('imagen'), async (req, res) => {
 
       if(req.file !== undefined){
 
-            const filePath = req.file.path; 
+            const filePath = req.file.path;
+
+            // Eliminar imágenes antiguas del post
+            const oldImagen = Array.isArray(postData.imagen) ? postData.imagen[0] : postData.imagen;
+            if (oldImagen) {
+              const oldFiles = [oldImagen.small, oldImagen.medium, oldImagen.large].filter(f => typeof f === 'string');
+              await Promise.allSettled(
+                oldFiles.map(f => fs.unlink(path.join(FILES_DIR, f)).catch(() => {}))
+              );
+            }
 
             // Procesamiento en paralelo
             await Promise.all([
@@ -159,7 +170,7 @@ router.put("/",upload.single('imagen'), async (req, res) => {
               helperImg(filePath, `1280-${namePicture}`, 'medium'),
               helperImg(filePath, `1920-${namePicture}`, 'large')
             ]);
-          
+
             await fs.unlink(filePath);
 
       }

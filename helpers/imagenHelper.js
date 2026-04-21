@@ -4,6 +4,8 @@ const sharp = require('sharp');
 const fs = require('fs/promises');
 const path = require('path');
 
+const FILES_DIR = process.env.FILES_PATH || '/files';
+
 
 const helperImg = async (filePath, fileName, sizeType = 'medium',modo,ratioType) => {
   try {
@@ -44,7 +46,7 @@ const helperImg = async (filePath, fileName, sizeType = 'medium',modo,ratioType)
 
     const outputSize = (sizes[ratioType] && sizes[ratioType][sizeType]) || sizes.photo.medium;
 
-    const outputFilePath = `/files/${namePicture}.png`;
+    const outputFilePath = path.join(FILES_DIR, `${namePicture}.jpg`);
 
 
     // Asegurar que el directorio existe
@@ -53,8 +55,8 @@ const helperImg = async (filePath, fileName, sizeType = 'medium',modo,ratioType)
 
     if(modo === 'fit'){
         await image
-        .resize(outputSize.width, outputSize.height, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 0 } })
-        .png({ compressionLevel: 7 })
+        .resize(outputSize.width, outputSize.height, { fit: 'contain', background: { r: 255, g: 255, b: 255 } })
+        .jpeg({ quality: 85 })
         .toFile(outputFilePath);
 
     }
@@ -63,7 +65,7 @@ const helperImg = async (filePath, fileName, sizeType = 'medium',modo,ratioType)
     await image
       .extract({ width: newWidth, height: newHeight, left, top })
       .resize(outputSize.width, outputSize.height, { fit: 'cover', position: 'center' })
-      .png({ compressionLevel: 7 })
+      .jpeg({ quality: 85 })
       .toFile(outputFilePath);
      }
 

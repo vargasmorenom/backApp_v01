@@ -7,18 +7,21 @@ const tk = require("jsonwebtoken");
 
 const multer = require('multer');
 const sharp = require('sharp');
+const path = require('path');
+
+const FILES_DIR = process.env.FILES_PATH || '/files';
 
 const app = express();
 const router = express.Router();
 app.use(bodyParser.urlencoded( { extended: false } ));
 
 const helperImg = (filePath, fileName, size = 300) =>{
-    return sharp(filePath).resize(size).jpeg({ quality: 85 }).toFile(`./files/${fileName}.jpg`)
+    return sharp(filePath).resize(size).jpeg({ quality: 85 }).toFile(path.join(FILES_DIR, `${fileName}.jpg`))
 }
 
 const storage = multer.diskStorage({
     destination:(req, file, cb)=>{
-        cb(null,'./files') 
+        cb(null, FILES_DIR)
     },
     filename: (req, file, cb) => {
         const ext = file.originalname.split('.').pop();

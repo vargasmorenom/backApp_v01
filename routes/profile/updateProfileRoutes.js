@@ -43,9 +43,20 @@ router.put("/", async (req, res) => {
 
     // Verificar si el perfil ya existe
     const profile = await Profile.findOne({ userBy });
-      
+
     if (!profile) {
       return res.status(409).json({ message: "El perfil no existe" });
+    }
+
+    // Validar que el email no esté en uso por otra cuenta o perfil
+    if (email && email !== user.email) {
+      const [emailInUser, emailInProfile] = await Promise.all([
+        User.findOne({ email, _id: { $ne: userBy } }),
+        Profile.findOne({ email, userBy: { $ne: userBy } }),
+      ]);
+      if (emailInUser || emailInProfile) {
+        return res.status(409).json({ message: "El email ya está siendo usado por otra cuenta" });
+      }
     }
 
     // Procesamiento de redes sociales

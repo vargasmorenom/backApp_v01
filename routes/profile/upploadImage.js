@@ -2,10 +2,9 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const sharp = require('sharp');
+const path = require('path');
 
-const app = express()
-
-
+const FILES_DIR = process.env.FILES_PATH || '/files';
 
 const helperImg = async (filePath, fileName, size = 300) => {
   const image = sharp(filePath);
@@ -16,16 +15,16 @@ const helperImg = async (filePath, fileName, size = 300) => {
   const top = Math.floor((metadata.height - squareSize) / 2);
 
   return image
-    .extract({ width: squareSize, height: squareSize, left, top }) // recorte centrado
-    .resize(size, size) // redimensionar al tamaño deseado
+    .extract({ width: squareSize, height: squareSize, left, top })
+    .resize(size, size)
     .jpeg({ quality: 85 })
-    .toFile(`/files/${fileName}.jpg`);
+    .toFile(path.join(FILES_DIR, `${fileName}.jpg`));
 };
 
 
 const storage = multer.diskStorage({
     destination:(req, file, cb)=>{
-        cb(null,'/files') 
+        cb(null, FILES_DIR)
     },
     filename: (req, file, cb) => {
         const ext = file.originalname.split('.').pop();

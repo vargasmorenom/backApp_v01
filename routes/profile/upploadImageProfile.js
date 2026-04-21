@@ -65,16 +65,27 @@ router.post('/', upload.single('imagen'), async (req, res) => {
     }
 
     const profilePic = {
-      small:  `60-${userId}.jpg`,
-      medium: `300-${userId}.jpg`,
-      large:  `600-${userId}.jpg`,
+      small:   `60-${userId}.jpg`,
+      medium:  `120-${userId}.jpg`,
+      large:   `300-${userId}.jpg`,
+      xlarge:  `600-${userId}.jpg`,
     };
+
+    // Eliminar imágenes anteriores del perfil
+    const oldProfile = await Profile.findOne({ userBy: userId }).lean();
+    if (oldProfile?.profilePic) {
+      const oldFiles = Object.values(oldProfile.profilePic);
+      await Promise.allSettled(
+        oldFiles.map(f => fs.unlink(path.join(FILES_DIR, f)).catch(() => {}))
+      );
+    }
 
     // Procesamiento en paralelo
     await Promise.all([
+      helperImg(filePath, `60-${userId}`, 60),
+      helperImg(filePath, `120-${userId}`, 120),
       helperImg(filePath, `300-${userId}`, 300),
       helperImg(filePath, `600-${userId}`, 600),
-      helperImg(filePath, `60-${userId}`, 60)
     ]);
 
     fs.unlink(filePath).catch(e => console.warn('[profileImg] No se pudo eliminar temporal:', e.message));
