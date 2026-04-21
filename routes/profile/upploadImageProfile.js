@@ -39,7 +39,7 @@ const helperImg = async (filePath, fileName, size) => {
   const left = Math.floor((metadata.width - squareSize) / 2);
   const top = Math.floor((metadata.height - squareSize) / 2);
 
-  const outputPath = path.join(__dirname, `../../files/${fileName}.png`);
+  const outputPath = path.join(__dirname, `/files/${fileName}.png`);
   await image
     .extract({ width: squareSize, height: squareSize, left, top })
     .resize(size, size)
@@ -61,11 +61,10 @@ router.post('/', upload.single('imagen'), async (req, res) => {
       return res.status(400).json({ error: 'Faltan datos requeridos: userBy o usuario' });
     }
 
-    const baseUrl = process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
     const profilePic = {
-      small:  `${baseUrl}/files/60-${userId}.png`,
-      medium: `${baseUrl}/files/300-${userId}.png`,
-      large:  `${baseUrl}/files/600-${userId}.png`,
+      small:  `60-${userId}.png`,
+      medium: `300-${userId}.png`,
+      large:  `600-${userId}.png`,
     };
 
     // Procesamiento en paralelo

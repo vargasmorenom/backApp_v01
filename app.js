@@ -89,10 +89,13 @@ app.use((req, res, next) => {
     }
 });
 app.use(express.urlencoded({ extended: true }));
-app.use('/files', (req, res, next) => {
+const staticHeaders = (req, res, next) => {
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     next();
-}, express.static(path.join(__dirname, "files")));
+};
+app.use('/files',  staticHeaders, express.static(path.join(__dirname, 'files')));
+app.use('/images', staticHeaders, express.static(path.join(__dirname, 'images')));
+app.use('/static', staticHeaders, express.static(path.join(__dirname, 'static')));
 
 app.use(session({
     secret: process.env.SESSION_SECRET || "salida en codigo",

@@ -87,7 +87,6 @@ router.post("/", (req, res, next) => {
 
        
     // manejo de las imagenes
-    const baseUrl = process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
     let imagenes;
 
     if (req.file) {
@@ -103,15 +102,15 @@ router.post("/", (req, res, next) => {
       fs.unlink(filePath).catch(e => console.warn('[upload] No se pudo eliminar temporal:', e.message));
 
       imagenes = {
-        small:  `${baseUrl}/files/640-${namePicture}.png`,
-        medium: `${baseUrl}/files/1280-${namePicture}.png`,
-        large:  `${baseUrl}/files/1920-${namePicture}.png`,
+        small:  `640-${namePicture}.png`,
+        medium: `1280-${namePicture}.png`,
+        large:  `1920-${namePicture}.png`,
       };
     } else {
       imagenes = {
-        small:  `${baseUrl}/files/640-default.png`,
-        medium: `${baseUrl}/files/1280-default.png`,
-        large:  `${baseUrl}/files/1920-default.png`,
+        small:  `640-default.png`,
+        medium: `1280-default.png`,
+        large:  `1920-default.png`,
       };
     }
 
