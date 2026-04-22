@@ -6,8 +6,9 @@ const SharedLink = require('../../models/SharedLinkSchema');
 router.get('/:id', async (req, res) => {
     try {
         const appUrl   = process.env.FRONTEND_URL || 'http://localhost:8100';
-        const backUrl  = process.env.API_BASE_URL  || 'http://localhost:8080';
-        const filesUrl = `${backUrl}/files/`;
+        // Derive files URL from the incoming request so it's always correct
+        const selfUrl  = `${req.protocol}://${req.get('host')}`;
+        const filesUrl = `${selfUrl}/files/`;
         let post, postUrl;
 
         // SharedLink tokens are 48 hex chars; MongoDB ObjectIds are 24
