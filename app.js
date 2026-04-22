@@ -94,7 +94,7 @@ const staticHeaders = (req, res, next) => {
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     next();
 };
-app.use('/files',  staticHeaders, express.static(process.env.FILES_PATH || '/files'));
+app.use('/files',  staticHeaders, express.static(process.env.FILES_PATH || '/tmp/files'));
 app.use('/images', staticHeaders, express.static(path.join(__dirname, 'images')));
 app.use('/static', staticHeaders, express.static(path.join(__dirname, 'static')));
 

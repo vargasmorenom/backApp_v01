@@ -6,7 +6,13 @@ const path = require('path');
 const fs = require('fs/promises');
 const Profile = require('../../models/ProfileSchema');
 
-const FILES_DIR = process.env.FILES_PATH || '/files';
+const FILES_DIR = process.env.FILES_PATH || '/tmp/files';
+
+// Crear directorio si no existe
+const fsSync = require('fs');
+if (!fsSync.existsSync(FILES_DIR)) {
+  fsSync.mkdirSync(FILES_DIR, { recursive: true });
+}
 
 // Configuración Multer con validación de tipo de archivo
 const storage = multer.diskStorage({
@@ -100,13 +106,16 @@ router.post('/', upload.single('imagen'), async (req, res) => {
     });
 
   } catch (err) {
-    console.error('Error en subida de imagen:', err.message);
+    console.error('Error en subida de imagen:', err);
 
     if (err instanceof multer.MulterError) {
       return res.status(400).json({ error: `Error de Multer: ${err.message}` });
     }
 
-    res.status(500).json({ error: 'Error interno al procesar la imagen' });
+    res.status(500).json({
+      error: 'Error interno al procesar la imagen',
+      detail: process.env.NODE_ENV !== 'production' ? err.message : undefined
+    });
   }
 });
 
