@@ -139,6 +139,7 @@ app.use(apiVersion + "/postsbytag",   require('./routes/posts/getPostsByTagRoute
 app.use(apiVersion + "/trendingtags", require('./routes/posts/getTrendingTagsRoutes'));
 app.use(apiVersion + "/search",       require('./routes/posts/getPostsBySearchRoutes'));
 app.use(apiVersion + "/getviewpost",  require('./routes/posts/getViewPostRoutes'));
+app.use('/share',                     require('./routes/posts/shareRoutes'));
 
 // ── Rutas públicas con reCAPTCHA ──────────────────────────────────────────────
 app.use(apiVersion + "/register",   registerLimiter, verifyRecaptcha, require('./routes/auth/registerRoutes'));
