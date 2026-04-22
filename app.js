@@ -177,6 +177,7 @@ const protectedRoutes = [
     { path: apiVersion + "/content/socialid5/", router: require('./routes/content/createYoutubePostContentRoutes') },
     { path: apiVersion + "/content/socialid6/", router: require('./routes/content/createLinkeidPostContentRoutes') },
     { path: apiVersion + "/content/socialid7/", router: require('./routes/content/createTelegramPostContentRoutes') },
+    { path: apiVersion + "/content/socialid8/", router: require('./routes/content/createWhatsAppPostContentRoutes') },
 
     // Social
     { path: apiVersion + "/likes",              router: require('./routes/social/LikePostRoutes') },

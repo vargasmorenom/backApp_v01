@@ -1,4 +1,5 @@
 const express = require('express');
+const { Types } = require('mongoose');
 const resolverFacebookShortUrl = require('../../helpers/resolverFacebookUrl');
 const strategies = require('../../helpers/configFacebook');
 const Post = require('../../models/PostSchema');
@@ -64,6 +65,8 @@ router.put("/", async (req, res) => {
       
 
       const contenidoPost = {
+            platform: 'facebook',
+            shareId: new Types.ObjectId().toString(),
             titulo: titulo || null,
             listas: dataContent,
         };

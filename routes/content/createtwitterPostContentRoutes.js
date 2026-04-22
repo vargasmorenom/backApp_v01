@@ -1,4 +1,5 @@
 const express = require('express');
+const { Types } = require('mongoose');
 const Post = require('../../models/PostSchema');
 
 
@@ -65,6 +66,8 @@ router.put("/", async (req, res) => {
         }
       
        arrayDeCadenas.titulo = titulo || null;
+       arrayDeCadenas.platform = 'twitter';
+       arrayDeCadenas.shareId = new Types.ObjectId().toString();
 
        const updatedPost = await Post.findByIdAndUpdate(
 

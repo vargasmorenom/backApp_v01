@@ -1,4 +1,5 @@
 const express = require('express');
+const { Types } = require('mongoose');
 const Post = require('../../models/PostSchema');
 
 const router = express.Router();
@@ -52,6 +53,7 @@ router.put("/", async (req, res) => {
         }
 
         telegramInfo.titulo = titulo || null;
+        telegramInfo.shareId = new Types.ObjectId().toString();
 
         const updatedPost = await Post.findByIdAndUpdate(
             postId,

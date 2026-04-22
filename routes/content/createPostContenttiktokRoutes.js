@@ -1,4 +1,5 @@
 const express = require('express');
+const { Types } = require('mongoose');
 const Post = require('../../models/PostSchema');
 const resolveTiktokShortUrl = require('../../helpers/resolveTikTokShortUrl');
 
@@ -59,6 +60,8 @@ router.put("/", async (req, res) => {
          
            
        const dataContent = {
+          platform: 'tiktok',
+          shareId: new Types.ObjectId().toString(),
           id: idvideo[0],
           urltik: urlcode,
           tipo: arrayDeCadenas[4],

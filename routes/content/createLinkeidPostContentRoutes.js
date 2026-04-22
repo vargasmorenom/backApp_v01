@@ -1,6 +1,6 @@
 const express = require('express');
+const { Types } = require('mongoose');
 const Post = require('../../models/PostSchema');
-
 
 const router = express.Router();
 
@@ -49,6 +49,8 @@ router.put("/", async (req, res) => {
       }
     
       const dataContent = {
+          platform: 'linkedin',
+          shareId: new Types.ObjectId().toString(),
           url: url,
           idpost: arrayDeCadenas,
           titulo: titulo || null

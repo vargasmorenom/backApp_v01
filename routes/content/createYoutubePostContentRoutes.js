@@ -1,6 +1,6 @@
 const express = require('express');
+const { Types } = require('mongoose');
 const Post = require('../../models/PostSchema');
-
 
 const router = express.Router();
 
@@ -56,12 +56,12 @@ router.put("/", async (req, res) => {
       }
     
       const dataContent = {
-
+          platform: 'youtube',
+          shareId: new Types.ObjectId().toString(),
           url: url,
           id: arrayDeCadenas,
           thumbnail: `https://img.youtube.com/vi/${arrayDeCadenas}/mqdefault.jpg`,
           titulo: titulo || null
-
         }
         
 
