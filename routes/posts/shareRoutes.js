@@ -6,9 +6,10 @@ const SharedLink = require('../../models/SharedLinkSchema');
 router.get('/:id', async (req, res) => {
     try {
         const appUrl   = process.env.FRONTEND_URL || 'http://localhost:8100';
-        // FILES_URL must be the Railway public domain — req.get('host') returns
-        // the Vercel domain when proxied, which doesn't serve /files/
         const filesUrl = process.env.FILES_URL || 'https://api-mylistys-production.up.railway.app/files/';
+        // og:url always points back to the share route so Facebook doesn't
+        // chase the redirect target and re-scrape index.html with the logo
+        const shareUrl = `${appUrl}/share/${req.params.id}`;
         let post, postUrl;
 
         // SharedLink tokens are 48 hex chars; MongoDB ObjectIds are 24
@@ -49,7 +50,7 @@ router.get('/:id', async (req, res) => {
   <meta property="og:image:type"       content="image/jpeg" />
   <meta property="og:image:width"      content="1200" />
   <meta property="og:image:height"     content="630" />
-  <meta property="og:url"              content="${postUrl}" />
+  <meta property="og:url"              content="${shareUrl}" />
   <meta name="twitter:card"        content="summary_large_image" />
   <meta name="twitter:title"       content="${title}" />
   <meta name="twitter:description" content="${description}" />
