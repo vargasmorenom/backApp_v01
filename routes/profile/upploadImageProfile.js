@@ -80,7 +80,9 @@ router.post('/', upload.single('imagen'), async (req, res) => {
     // Eliminar imágenes anteriores del perfil
     const oldProfile = await Profile.findOne({ userBy: userId }).lean();
     if (oldProfile?.profilePic) {
-      const oldFiles = Object.values(oldProfile.profilePic);
+      const oldFiles = ['small', 'medium', 'large', 'xlarge']
+        .map(k => oldProfile.profilePic[k])
+        .filter(Boolean);
       await Promise.allSettled(
         oldFiles.map(f => fs.unlink(path.join(FILES_DIR, f)).catch(() => {}))
       );

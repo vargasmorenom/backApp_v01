@@ -52,12 +52,11 @@ const refreshLimiter = rateLimit({
 // App principal
 const app = express();
 app.set('trust proxy', 1);
-app.use(helmet());
 
 const httpServer = http.createServer(app);
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
-  : ['http://localhost:8100', 'http://localhost:4200'];
+  : ['http://localhost:8100', 'http://localhost:8101', 'http://localhost:4200'];
 
 const corsOptions = {
   origin: (origin, callback) => {
@@ -67,8 +66,11 @@ const corsOptions = {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
 };
 
 const io = new Server(httpServer, {
@@ -79,9 +81,11 @@ const io = new Server(httpServer, {
 app.set('socketio', io);
 initSockets(io);
 
-// --- Middlewares globales ---
-app.use(cookieParser());
+// --- Middlewares globales --- (cors ANTES de helmet para que preflight OPTIONS funcione)
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+app.use(helmet());
+app.use(cookieParser());
 app.use((req, res, next) => {
     if (req.is('application/json')) {
         express.json()(req, res, next);
