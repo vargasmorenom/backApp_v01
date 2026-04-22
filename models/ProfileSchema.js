@@ -44,11 +44,12 @@ const profileSchema = new Schema({
         t: String,
         r: String,
     }],
-    profilePic: [{
+    profilePic: {
         small:  String,
         medium: String,
         large:  String,
-    }],
+        xlarge: String,
+    },
     userBy: {
         type: Schema.Types.ObjectId,
         ref: 'User',
