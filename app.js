@@ -139,6 +139,7 @@ app.use(apiVersion + "/postsbytag",   require('./routes/posts/getPostsByTagRoute
 app.use(apiVersion + "/trendingtags", require('./routes/posts/getTrendingTagsRoutes'));
 app.use(apiVersion + "/search",       require('./routes/posts/getPostsBySearchRoutes'));
 app.use(apiVersion + "/getviewpost",  require('./routes/posts/getViewPostRoutes'));
+app.use(apiVersion + "/shared",       require('./routes/posts/getSharedContentRoutes'));
 app.use('/share',                     require('./routes/posts/shareRoutes'));
 
 // ── Rutas públicas con reCAPTCHA ──────────────────────────────────────────────
@@ -169,6 +170,7 @@ const protectedRoutes = [
     { path: apiVersion + "/search",             router: require('./routes/posts/getPostsBySearchRoutes') },
     { path: apiVersion + "/viewpost",           router: require('./routes/posts/viewPostRoutes') },
     { path: apiVersion + "/getviewpost",        router: require('./routes/posts/getViewPostRoutes') },
+    { path: apiVersion + "/share",              router: require('./routes/posts/createSharedLinkRoutes') },
 
     // Contenido redes sociales
     { path: apiVersion + "/content/socialid1/", router: require('./routes/content/createtwitterPostContentRoutes') },

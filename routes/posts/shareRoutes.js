@@ -1,19 +1,29 @@
 const express = require('express');
 const router = express.Router();
 const Post = require('../../models/PostSchema');
+const SharedLink = require('../../models/SharedLinkSchema');
 
 router.get('/:id', async (req, res) => {
     try {
-        const post = await Post.findById(req.params.id).lean();
+        const appUrl   = process.env.FRONTEND_URL || 'http://localhost:8100';
+        const backUrl  = process.env.API_BASE_URL  || 'http://localhost:8080';
+        const filesUrl = `${backUrl}/files/`;
+        let post, postUrl;
 
-        if (!post) {
-            return res.redirect(process.env.FRONTEND_URL || 'http://localhost:8100');
+        // SharedLink tokens are 48 hex chars; MongoDB ObjectIds are 24
+        if (req.params.id.length === 48) {
+            const link = await SharedLink.findOne({ token: req.params.id, enabled: true }).lean();
+            if (!link) return res.redirect(appUrl);
+            post = await Post.findById(link.postId).lean();
+            postUrl = `${appUrl}/shared/${req.params.id}`;
+        } else {
+            post = await Post.findById(req.params.id).lean();
+            postUrl = `${appUrl}/adminlist?id=${req.params.id}`;
         }
 
-        const appUrl    = process.env.FRONTEND_URL || 'http://localhost:8100';
-        const backUrl   = process.env.API_BASE_URL  || 'http://localhost:8080';
-        const filesUrl  = `${backUrl}/files/`;
-        const postUrl   = `${appUrl}/adminlist?id=${post._id}`;
+        if (!post) {
+            return res.redirect(appUrl);
+        }
 
         const rawImg    = post.imagen?.[0]?.large ?? post.imagen?.[0]?.medium;
         const imageUrl  = rawImg
