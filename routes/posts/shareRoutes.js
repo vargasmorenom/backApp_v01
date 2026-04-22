@@ -6,9 +6,9 @@ const SharedLink = require('../../models/SharedLinkSchema');
 router.get('/:id', async (req, res) => {
     try {
         const appUrl   = process.env.FRONTEND_URL || 'http://localhost:8100';
-        // Derive files URL from the incoming request so it's always correct
-        const selfUrl  = `${req.protocol}://${req.get('host')}`;
-        const filesUrl = `${selfUrl}/files/`;
+        // FILES_URL must be the Railway public domain — req.get('host') returns
+        // the Vercel domain when proxied, which doesn't serve /files/
+        const filesUrl = process.env.FILES_URL || 'https://api-mylistys-production.up.railway.app/files/';
         let post, postUrl;
 
         // SharedLink tokens are 48 hex chars; MongoDB ObjectIds are 24
