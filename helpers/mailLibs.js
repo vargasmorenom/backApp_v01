@@ -1,19 +1,16 @@
-const nodemailer = require('nodemailer');
-const EmailQueue = require('../models/EmailQueueSchema');
+const { Resend } = require('resend');
+const EmailQueue  = require('../models/EmailQueueSchema');
+const emailTemplate = require('./emailTemplate');
 
-const MAIL_USER   = process.env.MAIL_USER;
 const MAX_RETRIES = 3;
-const RETRY_DELAY = 2000; // ms entre reintentos
+const RETRY_DELAY = 2000;
 
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: {
-        user: MAIL_USER,
-        pass: process.env.MAIL_PASS,
-    },
-});
+let _resend = null;
+const getResend = () => {
+    if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY);
+    return _resend;
+};
+const MAIL_FROM = () => process.env.RESEND_FROM || 'MyListys <noreply@mylistys.com>';
 
 // ── Procesador del queue ──────────────────────────────────────────────────────
 
@@ -24,7 +21,6 @@ async function procesarQueue() {
     procesando = true;
 
     try {
-        // Tomar el correo pendiente más antiguo
         const email = await EmailQueue.findOneAndUpdate(
             { status: 'pending', attempts: { $lt: MAX_RETRIES } },
             { $inc: { attempts: 1 } },
@@ -37,12 +33,16 @@ async function procesarQueue() {
         }
 
         try {
-            await transporter.sendMail({
-                from:    `"ListyFy" <${MAIL_USER}>`,
+            const payload = {
+                from:    MAIL_FROM(),
                 to:      email.to,
                 subject: email.subject,
-                html:    email.html,
-            });
+            };
+
+            payload.html = email.html;
+
+            const { error } = await getResend().emails.send(payload);
+            if (error) throw new Error(error.message);
 
             await EmailQueue.findByIdAndUpdate(email._id, {
                 status:    'sent',
@@ -70,7 +70,6 @@ async function procesarQueue() {
 
     } finally {
         procesando = false;
-        // Esperar 1 segundo entre envíos para no saturar el SMTP
         setTimeout(() => {
             EmailQueue.exists({ status: 'pending', attempts: { $lt: MAX_RETRIES } })
                 .then(hay => { if (hay) procesarQueue(); })
@@ -81,7 +80,7 @@ async function procesarQueue() {
 
 // ── Recuperar pendientes al arrancar ─────────────────────────────────────────
 
-const POLL_INTERVAL = 60 * 1000; // cada 60 segundos
+const POLL_INTERVAL = 60 * 1000;
 let pollerActivo = false;
 
 async function recuperarPendientes() {
@@ -133,7 +132,8 @@ async function estadoQueue() {
 
 // ── Encolar correo ────────────────────────────────────────────────────────────
 
-async function encolarCorreo(to, subject, html) {
+async function encolarCorreo(to, subject, variables = {}) {
+    const html  = emailTemplate(variables);
     const email = await EmailQueue.create({ to, subject, html });
     procesarQueue();
     return email;
@@ -143,43 +143,40 @@ async function encolarCorreo(to, subject, html) {
 
 async function enviarCorreoVerificacion(destinatario, nombreUsuario, token) {
     const enlace = `${process.env.FRONTEND_URL}/verificar?token=${token}&username=${nombreUsuario}`;
-    await encolarCorreo(
-        destinatario,
-        'Verifica tu inscripción',
-        `
-        <h3>Hola ${nombreUsuario},</h3>
-        <p>Gracias por inscribirte. Haz clic en el siguiente enlace para verificar tu correo:</p>
-        <a href="${enlace}">Verificar mi correo</a>
-        <p>Si no fuiste tú, ignora este mensaje.</p>
-        `
-    );
+    await encolarCorreo(destinatario, 'Verifica tu inscripción en MyListys', {
+        tipo:      'verificacion',
+        username:  nombreUsuario,
+        mensaje:   'Gracias por inscribirte. Haz clic en el siguiente enlace para verificar tu correo:',
+        cta_url:   enlace,
+        cta_texto: 'Verificar mi correo',
+    });
 }
 
 async function enviarCorreoRecuperacion(destinatario, nombreUsuario, code) {
-    await encolarCorreo(
-        destinatario,
-        'Recuperación de contraseña',
-        `
-        <h3>Hola ${nombreUsuario},</h3>
-        <p>Recibimos una solicitud para restablecer tu contraseña.</p>
-        <p>Tu código de verificación es:</p>
-        <h1 style="letter-spacing:8px">${code}</h1>
-        <p>Este código expira en <strong>15 minutos</strong>.</p>
-        <p>Si no fuiste tú, ignora este mensaje.</p>
-        `
-    );
+    await encolarCorreo(destinatario, 'Recuperación de contraseña - MyListys', {
+        tipo:     'recuperacion',
+        username: nombreUsuario,
+        mensaje:  'Recibimos una solicitud para restablecer tu contraseña. Tu código de verificación es:',
+        codigo:   code,
+    });
+}
+
+async function enviarCorreoBienvenida(destinatario, nombreUsuario) {
+    await encolarCorreo(destinatario, '¡Bienvenido a MyListys!', {
+        tipo:      'bienvenida',
+        username:  nombreUsuario,
+        mensaje:   '¡Tu cuenta ha sido activada exitosamente! Ya puedes empezar a crear y compartir tus listas de contenido.',
+        cta_url:   process.env.FRONTEND_URL || 'https://mylistys.com',
+        cta_texto: 'Ir a MyListys',
+    });
 }
 
 async function enviarCorreoConfirmacionPassword(destinatario, nombreUsuario) {
-    await encolarCorreo(
-        destinatario,
-        'Tu contraseña fue actualizada',
-        `
-        <h3>Hola ${nombreUsuario},</h3>
-        <p>Tu contraseña ha sido restablecida exitosamente.</p>
-        <p>Si no realizaste este cambio, comunícate con soporte de inmediato.</p>
-        `
-    );
+    await encolarCorreo(destinatario, 'Tu contraseña fue actualizada - MyListys', {
+        tipo:     'alerta',
+        username: nombreUsuario,
+        mensaje:  'Tu contraseña ha sido restablecida exitosamente. Si no realizaste este cambio, comunícate con soporte de inmediato.',
+    });
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -194,5 +191,6 @@ module.exports = {
     estadoQueue,
     enviarCorreoVerificacion,
     enviarCorreoRecuperacion,
+    enviarCorreoBienvenida,
     enviarCorreoConfirmacionPassword,
 };

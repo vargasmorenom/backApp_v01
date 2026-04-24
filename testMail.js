@@ -1,18 +1,31 @@
 const dotenv = require('dotenv');
-dotenv.config({ path: './.env' });
+dotenv.config({ path: './.env.development' });
 
-const { enviarCorreoVerificacion } = require('./helpers/mailLibs');
+const { Resend }      = require('resend');
+const emailTemplate   = require('./helpers/emailTemplate');
 
-const destinatario = "mc_vm@hotmail.com";
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-if (!destinatario) {
-    console.log('Uso: node testMail.js tucorreo@ejemplo.com');
-    process.exit(1);
+async function testMail() {
+    const html = emailTemplate({
+        username:  'Milton',
+        mensaje:   '¡Tu cuenta ha sido activada exitosamente! Ya puedes empezar a crear y compartir tus listas de contenido.',
+        cta_url:   'https://mylistys.com',
+        cta_texto: 'Ir a MyListys',
+    });
+
+    const { data, error } = await resend.emails.send({
+        from:    process.env.RESEND_FROM,
+        to:      'vargasmorenom@gmail.com',
+        subject: '¡Bienvenido a MyListys!',
+        html,
+    });
+
+    if (error) {
+        console.error('[Resend] Error:', error);
+    } else {
+        console.log('[Resend] Enviado correctamente. ID:', data.id);
+    }
 }
 
-console.log('Enviando correo de prueba a:', destinatario);
-console.log('Usando MAIL_USER:', "vargasmorenom@gmail.com" || '(no definido)');
-
-enviarCorreoVerificacion(destinatario, 'UsuarioPrueba', 'token-test-123')
-    .then(() => console.log('Proceso completado'))
-    .catch((err) => console.error('Error:', err));
+testMail();

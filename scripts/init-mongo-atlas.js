@@ -1,5 +1,5 @@
 /**
- * Script de inicialización para MongoDB Atlas - ListyFy
+ * Script de inicialización para MongoDB Atlas - MyListys
  *
  * USO:
  *   1. Pon tu connection string en .env: MONGODB_URI=mongodb+srv://...
