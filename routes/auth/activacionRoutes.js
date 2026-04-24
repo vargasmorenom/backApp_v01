@@ -1,6 +1,7 @@
 const express = require('express');
 const User = require('../../models/UserSchema');
 const Profile = require('../../models/ProfileSchema');
+const { enviarCorreoBienvenida } = require('../../helpers/mailLibs');
 
 const router = express.Router();
 
@@ -50,6 +51,10 @@ router.put("/", async (req, res) => {
         profilePic: [],
         userBy: user._id,
       });
+
+      enviarCorreoBienvenida(user.email, user.username).catch(e =>
+        console.error('[Mail] Error al enviar bienvenida:', e.message)
+      );
 
       return res.status(200).json(resultado);
 

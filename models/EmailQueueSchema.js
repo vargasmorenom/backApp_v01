@@ -11,7 +11,15 @@ const EmailQueueSchema = new Schema({
     },
     html: {
         type: String,
-        required: true,
+        default: null,
+    },
+    templateId: {
+        type: String,
+        default: null,
+    },
+    variables: {
+        type: Schema.Types.Mixed,
+        default: null,
     },
     status: {
         type: String,
