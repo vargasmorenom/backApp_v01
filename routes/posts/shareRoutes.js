@@ -30,11 +30,11 @@ router.get('/:id', async (req, res) => {
             return res.redirect(302, redirectUrl);
         }
 
-        const rawImg   = post.imagen?.large ?? post.imagen?.medium;
+        const rawImg   = post.imagen?.[0]?.large ?? post.imagen?.[0]?.medium;
         const imageUrl = rawImg
             ? (rawImg.startsWith('http') ? rawImg : filesUrl + rawImg)
             : `${appUrl}/assets/logo/logoMyllistys+200.png`;
-
+       console.log('imageUrl:', imageUrl);
         const title       = (post.name || 'mylistys').replace(/"/g, '&quot;');
         const description = (post.description || post.typePostName || 'Descubre contenido en mylistys').slice(0, 200).replace(/"/g, '&quot;');
         const canonicalUrl = `${apiUrl}/share/${req.params.id}`;
@@ -45,6 +45,7 @@ router.get('/:id', async (req, res) => {
 <head>
   <meta charset="utf-8" />
   <title>${title} | mylistys</title>
+  <meta property="og:url" content="https://www.mylistys.com/adminlist?id=69e7a3219509d52ef64b241e">
   <meta property="og:site_name"        content="mylistys" />
   <meta property="og:type"             content="article" />
   <meta property="og:title"            content="${title}" />
@@ -54,7 +55,7 @@ router.get('/:id', async (req, res) => {
   <meta property="og:image:type"       content="image/jpeg" />
   <meta property="og:image:width"      content="1200" />
   <meta property="og:image:height"     content="630" />
-  <meta property="og:url"              content="${canonicalUrl}" />
+
   <meta name="twitter:card"        content="summary_large_image" />
   <meta name="twitter:title"       content="${title}" />
   <meta name="twitter:description" content="${description}" />

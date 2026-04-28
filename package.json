@@ -37,5 +37,8 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.0"
+  },
+  "overrides": {
+    "tr46": "^4.1.1"
   }
 }
