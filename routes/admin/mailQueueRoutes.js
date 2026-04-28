@@ -1,6 +1,6 @@
 const express = require('express');
 const EmailQueue = require('../../models/EmailQueueSchema');
-const { estadoQueue } = require('../../helpers/mailLibs');
+const { estadoQueue, encolarCorreo } = require('../../helpers/mailLibs');
 
 const router = express.Router();
 
@@ -35,6 +35,25 @@ router.get('/failed', async (req, res) => {
         return res.json(fallidos);
     } catch (err) {
         return res.status(500).json({ message: 'Error al obtener fallidos.' });
+    }
+});
+
+// POST /api/v1/admin/mail-queue/test — enviar correo de prueba
+router.post('/test', async (req, res) => {
+    const to = req.body.to;
+    if (!to) return res.status(400).json({ message: 'Falta el campo "to".' });
+
+    try {
+        const email = await encolarCorreo(to, 'Correo de prueba - MyListys', {
+            tipo:      'verificacion',
+            username:  'Admin',
+            mensaje:   'Este es un correo de prueba enviado desde el panel de administración.',
+            cta_url:   process.env.FRONTEND_URL || 'https://mylistys.com',
+            cta_texto: 'Ir a MyListys',
+        });
+        return res.json({ message: `Correo de prueba encolado para ${to}.`, id: email._id });
+    } catch (err) {
+        return res.status(500).json({ message: 'Error al encolar correo de prueba.', error: err.message });
     }
 });
 
