@@ -30,22 +30,18 @@ router.get('/:id', async (req, res) => {
             return res.redirect(302, redirectUrl);
         }
 
-        const rawImg   = post.imagen?.[0]?.large ?? post.imagen?.[0]?.medium;
-        const imageUrl = rawImg
-            ? (rawImg.startsWith('http') ? rawImg : filesUrl + rawImg)
-            : `${appUrl}/assets/logo/logoMyllistys+200.png`;
-       console.log('imageUrl:', imageUrl);
+        const imageUrl = `${appUrl}/assets/logo/logoMyllistys+200.png`;
+      
         const title       = (post.name || 'mylistys').replace(/"/g, '&quot;');
         const description = (post.description || post.typePostName || 'Descubre contenido en mylistys').slice(0, 200).replace(/"/g, '&quot;');
         const canonicalUrl = `${apiUrl}/share/${req.params.id}`;
-       console.log(canonicalUrl);
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.send(`<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
   <title>${title} | mylistys</title>
-  <meta property="og:url" content="https://www.mylistys.com/adminlist?id=69e7a3219509d52ef64b241e">
+  <meta property="og:url"              content="${canonicalUrl}" />
   <meta property="og:site_name"        content="mylistys" />
   <meta property="og:type"             content="article" />
   <meta property="og:title"            content="${title}" />
