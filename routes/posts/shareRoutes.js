@@ -30,7 +30,7 @@ router.get('/:id', async (req, res) => {
             return res.redirect(302, redirectUrl);
         }
 
-        const rawImg   = post.imagen?.[0]?.large ?? post.imagen?.[0]?.medium;
+        const rawImg   = post.imagen?.large ?? post.imagen?.medium;
         const imageUrl = rawImg
             ? (rawImg.startsWith('http') ? rawImg : filesUrl + rawImg)
             : `${appUrl}/assets/logo/logoMyllistys+200.png`;
@@ -38,7 +38,7 @@ router.get('/:id', async (req, res) => {
         const title       = (post.name || 'mylistys').replace(/"/g, '&quot;');
         const description = (post.description || post.typePostName || 'Descubre contenido en mylistys').slice(0, 200).replace(/"/g, '&quot;');
         const canonicalUrl = `${apiUrl}/share/${req.params.id}`;
-
+       console.log(canonicalUrl);
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.send(`<!DOCTYPE html>
 <html lang="es">
