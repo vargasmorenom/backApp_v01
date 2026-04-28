@@ -189,6 +189,7 @@ module.exports = {
     recuperarPendientes,
     iniciarPoller,
     estadoQueue,
+    encolarCorreo,
     enviarCorreoVerificacion,
     enviarCorreoRecuperacion,
     enviarCorreoBienvenida,
