@@ -6,9 +6,9 @@ const SharedLink = require('../../models/SharedLinkSchema');
 const CRAWLER_RE = /facebookexternalhit|Twitterbot|WhatsApp|TelegramBot|LinkedInBot|Slackbot|vkShare|W3C_Validator|bot|crawler|spider/i;
 
 router.get('/:id', async (req, res) => {
-    const appUrl   = process.env.FRONTEND_URL || 'http://localhost:8100';
-    const apiUrl   = process.env.API_BASE_URL  || 'https://api-mylistys-production.up.railway.app';
-    const filesUrl = process.env.FILES_URL     || `${apiUrl}/files/`;
+    const appUrl    = process.env.FRONTEND_URL || 'https://www.mylistys.com';
+    const filesUrl  = process.env.FILES_URL    || 'https://api-mylistys-production.up.railway.app/files/';
+    const apiUrl    = 'https://api-mylistys-production.up.railway.app';
     const isCrawler = CRAWLER_RE.test(req.headers['user-agent'] || '');
 
     try {
