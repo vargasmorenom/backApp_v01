@@ -3,37 +3,41 @@ const router = express.Router();
 const Post = require('../../models/PostSchema');
 const SharedLink = require('../../models/SharedLinkSchema');
 
-router.get('/:id', async (req, res) => {
-    try {
-        const appUrl   = process.env.FRONTEND_URL || 'http://localhost:8100';
-        const filesUrl = process.env.FILES_URL || 'https://api-mylistys-production.up.railway.app/files/';
-        // og:url always points back to the share route so Facebook doesn't
-        // chase the redirect target and re-scrape index.html with the logo
-        const shareUrl = `${appUrl}/share/${req.params.id}`;
-        let post, postUrl;
+const CRAWLER_RE = /facebookexternalhit|Twitterbot|WhatsApp|TelegramBot|LinkedInBot|Slackbot|vkShare|W3C_Validator|bot|crawler|spider/i;
 
-        // SharedLink tokens are 48 hex chars; MongoDB ObjectIds are 24
+router.get('/:id', async (req, res) => {
+    const appUrl   = process.env.FRONTEND_URL || 'http://localhost:8100';
+    const apiUrl   = process.env.API_BASE_URL  || 'https://api-mylistys-production.up.railway.app';
+    const filesUrl = process.env.FILES_URL     || `${apiUrl}/files/`;
+    const isCrawler = CRAWLER_RE.test(req.headers['user-agent'] || '');
+
+    try {
+        let post, redirectUrl;
+
         if (req.params.id.length === 48) {
             const link = await SharedLink.findOne({ token: req.params.id, enabled: true }).lean();
-            if (!link) return res.redirect(appUrl);
+            if (!link) return res.redirect(302, appUrl);
             post = await Post.findById(link.postId).lean();
-            postUrl = `${appUrl}/shared/${req.params.id}`;
+            redirectUrl = `${appUrl}/shared/${req.params.id}`;
         } else {
             post = await Post.findById(req.params.id).lean();
-            postUrl = `${appUrl}/adminlist?id=${req.params.id}`;
+            redirectUrl = `${appUrl}/shared/${req.params.id}`;
         }
 
-        if (!post) {
-            return res.redirect(appUrl);
+        if (!post) return res.redirect(302, appUrl);
+
+        if (!isCrawler) {
+            return res.redirect(302, redirectUrl);
         }
 
-        const rawImg    = post.imagen?.[0]?.large ?? post.imagen?.[0]?.medium;
-        const imageUrl  = rawImg
+        const rawImg   = post.imagen?.[0]?.large ?? post.imagen?.[0]?.medium;
+        const imageUrl = rawImg
             ? (rawImg.startsWith('http') ? rawImg : filesUrl + rawImg)
-            : `${appUrl}/assets/logo/logoMyllistys.png`;
+            : `${appUrl}/assets/logo/logoMyllistys+200.png`;
 
-        const title       = post.name || 'mylistys';
-        const description = (post.description || post.typePostName || 'Descubre contenido en mylistys').slice(0, 200);
+        const title       = (post.name || 'mylistys').replace(/"/g, '&quot;');
+        const description = (post.description || post.typePostName || 'Descubre contenido en mylistys').slice(0, 200).replace(/"/g, '&quot;');
+        const canonicalUrl = `${apiUrl}/share/${req.params.id}`;
 
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.send(`<!DOCTYPE html>
@@ -41,31 +45,27 @@ router.get('/:id', async (req, res) => {
 <head>
   <meta charset="utf-8" />
   <title>${title} | mylistys</title>
-  <meta property="og:site_name"   content="mylistys" />
-  <meta property="og:type"        content="article" />
-  <meta property="og:title"       content="${title}" />
-  <meta property="og:description" content="${description}" />
+  <meta property="og:site_name"        content="mylistys" />
+  <meta property="og:type"             content="article" />
+  <meta property="og:title"            content="${title}" />
+  <meta property="og:description"      content="${description}" />
   <meta property="og:image"            content="${imageUrl}" />
   <meta property="og:image:secure_url" content="${imageUrl}" />
   <meta property="og:image:type"       content="image/jpeg" />
   <meta property="og:image:width"      content="1200" />
   <meta property="og:image:height"     content="630" />
-  <meta property="og:url"              content="${shareUrl}" />
+  <meta property="og:url"              content="${canonicalUrl}" />
   <meta name="twitter:card"        content="summary_large_image" />
   <meta name="twitter:title"       content="${title}" />
   <meta name="twitter:description" content="${description}" />
   <meta name="twitter:image"       content="${imageUrl}" />
-  <meta http-equiv="refresh" content="0; url=${postUrl}" />
 </head>
-<body>
-  <a href="${postUrl}">Ver en mylistys</a>
-  <script>window.location.replace('${postUrl}');</script>
-</body>
+<body></body>
 </html>`);
 
     } catch (err) {
         console.error('[share] error:', err.message);
-        res.redirect(process.env.FRONTEND_URL || 'http://localhost:8100');
+        res.redirect(302, appUrl);
     }
 });
 
