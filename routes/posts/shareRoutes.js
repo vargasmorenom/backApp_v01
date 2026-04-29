@@ -7,8 +7,6 @@ const CRAWLER_RE = /facebookexternalhit|Twitterbot|WhatsApp|TelegramBot|LinkedIn
 
 router.get('/:id', async (req, res) => {
     const appUrl    = process.env.FRONTEND_URL || 'https://www.mylistys.com';
-    const filesUrl  = process.env.FILES_URL    || 'https://api-mylistys-production.up.railway.app/files/';
-    const apiUrl    = 'https://api-mylistys-production.up.railway.app';
     const isCrawler = CRAWLER_RE.test(req.headers['user-agent'] || '');
 
     try {
@@ -34,7 +32,7 @@ router.get('/:id', async (req, res) => {
 
         const title       = (post.name || 'mylistys').replace(/"/g, '&quot;');
         const description = (post.description || post.typePostName || 'Descubre contenido en mylistys').slice(0, 200).replace(/"/g, '&quot;');
-        const canonicalUrl = `${apiUrl}/share/${req.params.id}`;
+        const canonicalUrl = `${appUrl}/share/${req.params.id}`;
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.send(`<!DOCTYPE html>
 <html lang="es">
