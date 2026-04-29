@@ -30,8 +30,8 @@ router.get('/:id', async (req, res) => {
             return res.redirect(302, redirectUrl);
         }
 
-        const imageUrl = `${appUrl}/assets/logo/logoMyllistys+200.png`;
-      
+        const imageUrl = `${appUrl}/assets/logo/logoCompartir.jpg`;
+
         const title       = (post.name || 'mylistys').replace(/"/g, '&quot;');
         const description = (post.description || post.typePostName || 'Descubre contenido en mylistys').slice(0, 200).replace(/"/g, '&quot;');
         const canonicalUrl = `${apiUrl}/share/${req.params.id}`;
@@ -49,8 +49,8 @@ router.get('/:id', async (req, res) => {
   <meta property="og:image"            content="${imageUrl}" />
   <meta property="og:image:secure_url" content="${imageUrl}" />
   <meta property="og:image:type"       content="image/jpeg" />
-  <meta property="og:image:width"      content="1200" />
-  <meta property="og:image:height"     content="630" />
+  <meta property="og:image:width"      content="460" />
+  <meta property="og:image:height"     content="200" />
 
   <meta name="twitter:card"        content="summary_large_image" />
   <meta name="twitter:title"       content="${title}" />
