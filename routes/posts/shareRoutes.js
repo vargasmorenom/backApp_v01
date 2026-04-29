@@ -7,6 +7,7 @@ const CRAWLER_RE = /facebookexternalhit|Twitterbot|WhatsApp|TelegramBot|LinkedIn
 
 router.get('/:id', async (req, res) => {
     const appUrl    = process.env.FRONTEND_URL || 'https://www.mylistys.com';
+    const filesUrl  = process.env.FILES_URL    || 'https://api-mylistys-production.up.railway.app/files/';
     const isCrawler = CRAWLER_RE.test(req.headers['user-agent'] || '');
 
     try {
@@ -28,7 +29,12 @@ router.get('/:id', async (req, res) => {
             return res.redirect(302, redirectUrl);
         }
 
-        const imageUrl = `${appUrl}/assets/logo/logoCompartir.jpg`;
+        const rawImg   = post.imagen?.[0]?.large ?? post.imagen?.[0]?.medium;
+        const imageUrl = rawImg
+            ? (rawImg.startsWith('http') ? rawImg : filesUrl + rawImg)
+            : `${appUrl}/assets/logo/logoCompartir.jpg`;
+        const imgWidth  = rawImg ? '1200' : '737';
+        const imgHeight = rawImg ? '630'  : '314';
 
         const title       = (post.name || 'mylistys').replace(/"/g, '&quot;');
         const description = (post.description || post.typePostName || 'Descubre contenido en mylistys').slice(0, 200).replace(/"/g, '&quot;');
@@ -47,8 +53,8 @@ router.get('/:id', async (req, res) => {
   <meta property="og:image"            content="${imageUrl}" />
   <meta property="og:image:secure_url" content="${imageUrl}" />
   <meta property="og:image:type"       content="image/jpeg" />
-  <meta property="og:image:width"      content="460" />
-  <meta property="og:image:height"     content="200" />
+  <meta property="og:image:width"      content="${imgWidth}" />
+  <meta property="og:image:height"     content="${imgHeight}" />
 
   <meta name="twitter:card"        content="summary_large_image" />
   <meta name="twitter:title"       content="${title}" />
