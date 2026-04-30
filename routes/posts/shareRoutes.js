@@ -29,12 +29,12 @@ router.get('/:id', async (req, res) => {
             return res.redirect(302, redirectUrl);
         }
 
-        const rawImg   = post.imagen?.[0]?.large ?? post.imagen?.[0]?.medium;
+        const rawImg   = post.imagen?.[0]?.medium ?? post.imagen?.[0]?.large;
         const imageUrl = rawImg
             ? (rawImg.startsWith('http') ? rawImg : filesUrl + rawImg)
             : `${appUrl}/assets/logo/logoCompartir.jpg`;
-        const imgWidth  = rawImg ? '1200' : '737';
-        const imgHeight = rawImg ? '630'  : '314';
+        const imgWidth  = rawImg ? '1280' : '737';
+        const imgHeight = rawImg ? '960'  : '314';
 
         const title       = (post.name || 'mylistys').replace(/"/g, '&quot;');
         const description = (post.description || post.typePostName || 'Descubre contenido en mylistys').slice(0, 200).replace(/"/g, '&quot;');
