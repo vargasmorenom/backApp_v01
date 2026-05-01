@@ -9,7 +9,7 @@ router.get('/:id', async (req, res) => {
     const appUrl    = process.env.FRONTEND_URL || 'https://www.mylistys.com';
     const filesUrl  = process.env.FILES_URL    || 'https://api-mylistys-production.up.railway.app/files/';
     const isCrawler = CRAWLER_RE.test(req.headers['user-agent'] || '');
-
+  console.log('[share] request for id:', req.params.id, '| isCrawler:', isCrawler, '| user-agent:', req.headers['user-agent']);
     try {
         let post, redirectUrl;
 
@@ -25,14 +25,19 @@ router.get('/:id', async (req, res) => {
 
         if (!post) return res.redirect(302, appUrl);
 
+        const candidate = post.imagen?.[0]?.medium ?? post.imagen?.[0]?.large;
+        const rawImg    = candidate && !candidate.includes('default') ? candidate : null;
+        const imageUrl  = rawImg
+            ? (rawImg.startsWith('http') ? rawImg : filesUrl + rawImg)
+            : `${appUrl}/assets/logo/logoCompartir.jpg`;
+
+        console.log('[share] isCrawler:', isCrawler, '| user-agent:', req.headers['user-agent']);
+        console.log('[share] imagen raw:', candidate);
+        console.log('[share] imagen usada:', imageUrl);
+
         if (!isCrawler) {
             return res.redirect(302, redirectUrl);
         }
-
-        const rawImg   = post.imagen?.[0]?.medium ?? post.imagen?.[0]?.large;
-        const imageUrl = rawImg
-            ? (rawImg.startsWith('http') ? rawImg : filesUrl + rawImg)
-            : `${appUrl}/assets/logo/logoCompartir.jpg`;
         const imgWidth  = rawImg ? '1280' : '737';
         const imgHeight = rawImg ? '960'  : '314';
 
@@ -41,28 +46,37 @@ router.get('/:id', async (req, res) => {
         const canonicalUrl = `${appUrl}/share/${req.params.id}`;
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.send(`<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <title>${title} | mylistys</title>
-  <meta property="og:url"              content="${canonicalUrl}" />
-  <meta property="og:site_name"        content="mylistys" />
-  <meta property="og:type"             content="article" />
-  <meta property="og:title"            content="${title}" />
-  <meta property="og:description"      content="${description}" />
-  <meta property="og:image"            content="${imageUrl}" />
-  <meta property="og:image:secure_url" content="${imageUrl}" />
-  <meta property="og:image:type"       content="image/jpeg" />
-  <meta property="og:image:width"      content="${imgWidth}" />
-  <meta property="og:image:height"     content="${imgHeight}" />
+        <html lang="es">
+        <head>
+        <meta charset="utf-8" />
+        <title>${title} | mylistys</title>
 
-  <meta name="twitter:card"        content="summary_large_image" />
-  <meta name="twitter:title"       content="${title}" />
-  <meta name="twitter:description" content="${description}" />
-  <meta name="twitter:image"       content="${imageUrl}" />
-</head>
-<body></body>
-</html>`);
+        <meta property="og:url"              content="${canonicalUrl}" />
+        <meta property="og:site_name"        content="mylistys" />
+        <meta property="og:type"             content="article" />
+        <meta property="og:title"            content="${title}" />
+        <meta property="og:description"      content="${description}" />
+        <meta property="og:image"            content="${imageUrl}" />
+        <meta property="og:image:secure_url" content="${imageUrl}" />
+        <meta property="og:image:type"       content="image/jpeg" />
+        <meta property="og:image:width"      content="${imgWidth}" />
+        <meta property="og:image:height"     content="${imgHeight}" />
+
+        <meta name="twitter:card"        content="summary_large_image" />
+        <meta name="twitter:title"       content="${title}" />
+        <meta name="twitter:description" content="${description}" />
+        <meta name="twitter:image"       content="${imageUrl}" />
+
+        <script>
+            setTimeout(() => {
+            window.location.href = "${redirectUrl}";
+            }, 100);
+        </script>
+        </head>
+        <body>
+        Redirigiendo...
+        </body>
+        </html>`);
 
     } catch (err) {
         console.error('[share] error:', err.message);

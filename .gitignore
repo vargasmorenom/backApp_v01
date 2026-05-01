@@ -28,3 +28,7 @@ Thumbs.db
 # Runtime
 npm-debug.log*
 yarn-error.log*
+
+# Scripts de seed
+scripts/seedUsers.js
+scripts/deleteSeededUsers.js
