@@ -9,31 +9,25 @@ router.get('/:id', async (req, res) => {
     const appUrl    = process.env.FRONTEND_URL || 'https://www.mylistys.com';
     const filesUrl  = process.env.FILES_URL    || 'https://api-mylistys-production.up.railway.app/files/';
     const isCrawler = CRAWLER_RE.test(req.headers['user-agent'] || '');
-  console.log('[share] request for id:', req.params.id, '| isCrawler:', isCrawler, '| user-agent:', req.headers['user-agent']);
+  
     try {
         let post, redirectUrl;
 
-        if (req.params.id.length === 48) {
-            const link = await SharedLink.findOne({ token: req.params.id, enabled: true }).lean();
-            if (!link) return res.redirect(302, appUrl);
-            post = await Post.findById(link.postId).lean();
-            redirectUrl = `${appUrl}/shared/${req.params.id}`;
-        } else {
-            post = await Post.findById(req.params.id).lean();
-            redirectUrl = `${appUrl}/shared/${req.params.id}`;
-        }
+        if (req.params.id.length !== 48) return res.redirect(302, appUrl);
+
+        const link = await SharedLink.findOne({ token: req.params.id, enabled: true }).lean();
+        if (!link) return res.redirect(302, appUrl);
+        post = await Post.findById(link.postId).lean();
+        redirectUrl = `${appUrl}/shared/${req.params.id}`;
 
         if (!post) return res.redirect(302, appUrl);
 
         const candidate = post.imagen?.[0]?.medium ?? post.imagen?.[0]?.large;
         const rawImg    = candidate && !candidate.includes('default') ? candidate : null;
+     
         const imageUrl  = rawImg
             ? (rawImg.startsWith('http') ? rawImg : filesUrl + rawImg)
             : `${appUrl}/assets/logo/logoCompartir.jpg`;
-
-        console.log('[share] isCrawler:', isCrawler, '| user-agent:', req.headers['user-agent']);
-        console.log('[share] imagen raw:', candidate);
-        console.log('[share] imagen usada:', imageUrl);
 
         if (!isCrawler) {
             return res.redirect(302, redirectUrl);
