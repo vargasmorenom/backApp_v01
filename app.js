@@ -81,6 +81,15 @@ const io = new Server(httpServer, {
 app.set('socketio', io);
 initSockets(io);
 
+// robots.txt — permite todos los crawlers (incluido facebookexternalhit)
+app.get('/robots.txt', (_req, res) => {
+    res.type('text/plain');
+    res.send('User-agent: *\nAllow: /\n');
+});
+
+// CORS abierto para rutas de share (crawlers de redes sociales)
+app.use('/share', cors({ origin: '*' }));
+
 // --- Middlewares globales --- (cors ANTES de helmet para que preflight OPTIONS funcione)
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
