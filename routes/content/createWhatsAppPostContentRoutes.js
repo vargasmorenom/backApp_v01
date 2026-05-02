@@ -17,9 +17,7 @@ router.put('/', async (req, res) => {
             return res.status(404).json({ message: 'Post no encontrado' });
         }
 
-        const shareText = imagen
-            ? `${titulo}\n${imagen}\n${url}`
-            : `${titulo}\n${url}`;
+        const shareText = `${titulo}\n${url}`;
 
         const shareLink = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
 
