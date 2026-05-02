@@ -22,8 +22,9 @@ router.get('/:id', async (req, res) => {
 
         if (!post) return res.redirect(302, appUrl);
 
+        const PLACEHOLDER_RE = /default|logoMylistys|logo/i;
         const candidate = post.imagen?.[0]?.medium ?? post.imagen?.[0]?.large;
-        const rawImg    = candidate && !candidate.includes('default') ? candidate : null;
+        const rawImg    = candidate && !PLACEHOLDER_RE.test(candidate) ? candidate : null;
      
         const imageUrl  = rawImg
             ? (rawImg.startsWith('http') ? rawImg : filesUrl + rawImg)

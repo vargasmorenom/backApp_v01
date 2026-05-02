@@ -22,7 +22,7 @@ router.post('/', async (req, res) => {
             return res.status(403).json({ message: 'No tienes permiso para compartir este post' });
         }
 
-        const baseUrl = process.env.API_URL || 'https://api-mylistys-production.up.railway.app';
+        const baseUrl = process.env.FRONTEND_URL || 'https://www.mylistys.com';
 
         const existing = await SharedLink.findOne({ postId, createdBy: userId, enabled: true });
         if (existing) {
