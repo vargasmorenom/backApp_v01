@@ -9,7 +9,7 @@ router.put("/", async (req, res) => {
   try {
     // Definición de constantes
     const SOCIAL_NETWORKS = ['facebook', 'instagram', 'youtube', 'tiktok', 'x', 'twitter'];
-    const MESSAGING_APPS = ['whatsapp', 'telegram'];
+    const MESSAGING_APPS = ['whatsapp', 'telegram', 'signal', 'line', 'wechat', 'snapchat', 'viber', 'skype', 'discord'];
     
     // Extracción de datos del cuerpo de la solicitud
     const {
@@ -59,90 +59,39 @@ router.put("/", async (req, res) => {
       }
     }
 
-    // Procesamiento de redes sociales
-    const processSocialLinks = (linksString, validPlatforms) => {
-      if (!linksString) return [];
-      
-      return linksString.split(',')
-        .map(link => link.trim())
-        .filter(link => link.length > 0)
-        .reduce((result, link) => {
-          const platform = validPlatforms.find(p => link.includes(p));
-          if (platform) {
-            result.push({ t: platform, r: link });
-          }
-          return result;
+    const parseToObjects = (str, validPlatforms) => {
+      if (!str) return [];
+      return str.split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+        .reduce((acc, link) => {
+          const platform = validPlatforms.find(p => link.toLowerCase().includes(p));
+          if (platform) acc.push({ t: platform, r: link });
+          return acc;
         }, []);
     };
 
-    // Procesar los diferentes tipos de enlaces
-    
-     let processedSocialMedia = [];
-     let  socialMediaLength = '';
-     let  socialMediap = '';
-    if(socialMedia != '' && socialMedia.length != profile.socialMediaLength){
-        processedSocialMedia = processSocialLinks(socialMedia, SOCIAL_NETWORKS);
-        socialMediaLength = socialMedia.length;
-        socialMediap = socialMedia;
-        
-    }else{
-      socialMediap = profile.socialMediaString;
-      socialMediaLength = profile.socialMediaLength;
-      processedSocialMedia = profile.socialMedia;
+    const parseToStrings = (str) => {
+      if (!str) return [];
+      return str.split(',').map(s => s.trim()).filter(Boolean);
+    };
 
-    }
-    
-     let processedMessages = [];
-     let instantMessagesLength = '';
-     let instantMessagesp = '';
-    if(instantMessages != '' && instantMessages.length != profile.instantMessagesLength){
-        processedMessages = processSocialLinks(instantMessages, MESSAGING_APPS);
-         instantMessagesLength = instantMessages.length;
-         instantMessagesp = instantMessages;
-        
-    }else{
-      processedMessages = profile.instantMessages;
-      instantMessagesLength = profile.instantMessagesLength;
-      instantMessagesp = profile.instantMessagesString;
-    }
-    
-     let processedLinks = [];
-     let linksLength = '';
-     let linksp = '';
-    if(links != ''  && links.length != profile.linksLength){
- 
-        processedLinks = links ? links.split(',').map(link => link.trim()) : [];
-        linksLength = links.length;
-        linksp = linksp;
-    }else{
-      linksp = profile.linksString;
-      linksLength = profile.linksLength;
-      processedLinks = profile.links;
-
-    }
-    
-    //Crear el nuevo perfil
     await Profile.findOneAndUpdate(
-        { userBy },
-    {
-      firstName,
-      lastName,
-      email,
-      location,
-      phoneNumber,
-      chanelName,
-      description,
-      linksString:linksp,
-      linksLength:linksLength,
-      links: processedLinks,
-      socialMediaString:socialMediap,
-      socialMediaLength: socialMediaLength,
-      socialMedia: processedSocialMedia,
-      instantMessagesString:instantMessagesp,
-      instantMessagesLength: instantMessagesLength,
-      instantMessages: processedMessages,
-      userBy
-    });
+      { userBy },
+      {
+        firstName,
+        lastName,
+        email,
+        location,
+        phoneNumber,
+        chanelName,
+        description,
+        links: parseToStrings(links),
+        socialMedia: parseToObjects(socialMedia, SOCIAL_NETWORKS),
+        instantMessages: parseToObjects(instantMessages, MESSAGING_APPS),
+        userBy,
+      }
+    );
 
     return res.status(201).json({
       message: "Perfil  Actualizado",

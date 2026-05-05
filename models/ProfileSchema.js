@@ -32,10 +32,7 @@ const profileSchema = new Schema({
         trim: true,
         default: '',
     },
-    linksString: {
-        type: String,
-        trim: true,
-    },
+    links: [{ type: String, trim: true }],
     socialMedia: [{
         t: String,
         r: String,
