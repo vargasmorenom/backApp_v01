@@ -18,13 +18,9 @@ router.post('/', async (req, res) => {
             return res.status(404).json({ message: 'Post no encontrado' });
         }
 
-        if (String(post.postedBy) !== String(userId)) {
-            return res.status(403).json({ message: 'No tienes permiso para compartir este post' });
-        }
-
         const baseUrl = process.env.FRONTEND_URL || 'https://www.mylistys.com';
 
-        const existing = await SharedLink.findOne({ postId, createdBy: userId, enabled: true });
+        const existing = await SharedLink.findOne({ postId, enabled: true });
         if (existing) {
             return res.status(200).json({
                 token: existing.token,
