@@ -51,12 +51,7 @@ router.put("/", async (req, res) => {
            const response = await fetch(apiUrl);
            const data = await response.json();
 
-           let titulocortado = data.title;
-          
-           if(titulocortado.length > 120){
-
-            titulocortado = data.title.slice(0,120);
-           }
+           let titulocortado = (data.title ?? '').slice(0, 120);
          
            
        const dataContent = {
