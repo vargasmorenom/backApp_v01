@@ -67,7 +67,7 @@ const validaToken = async (req, res, next) => {
                 const newSessionData = { valida: refres.codeInterno, token: newAccessToken };
                 const compressedData = await compressBase64(newSessionData);
 
-                res.cookie('AuthToken', compressedData, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: "Lax" });
+                res.cookie('AuthToken', compressedData, { httpOnly: true, secure: true, sameSite: 'None', path: '/' });
                 
                 // Actualizar request actual
                 req.cookies.AuthToken = compressedData;

@@ -54,8 +54,9 @@ router.post("/", async (req, res) => {
 
         res.cookie('AuthToken', compressedData, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: "Lax"
+            secure: true,
+            sameSite: 'None',
+            path: '/',
         });
 
         return res.status(200).json({ 
