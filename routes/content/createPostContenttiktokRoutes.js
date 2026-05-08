@@ -30,63 +30,44 @@ router.put("/", async (req, res) => {
       }
 
      
-      const consultaPost = await Post.findById(postId);
+      const postExists = await Post.exists({ _id: postId });
 
-      if (!consultaPost) {
+      if (!postExists) {
         return res.status(404).json({ message: "Post no encontrado" });
       }
 
-        
-      
-            
       const resolvedUrl = await resolveTiktokShortUrl(url);
       urlcode = resolvedUrl || url;
-                    
-        
-        const arrayDeCadenas = urlcode.split("/");
-        const idvideo = arrayDeCadenas[5].split("?");
 
-           const fetch = globalThis.fetch;
-           const apiUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(urlcode)}`;
-           const response = await fetch(apiUrl);
-           const data = await response.json();
+      const arrayDeCadenas = urlcode.split("/");
+      const idvideo = arrayDeCadenas[5].split("?");
 
-           let titulocortado = (data.title ?? '').slice(0, 120);
-         
-           
-       const dataContent = {
-          platform: 'tiktok',
-          shareId: new Types.ObjectId().toString(),
-          id: idvideo[0],
-          urltik: urlcode,
-          tipo: arrayDeCadenas[4],
-          autor: data.author_name,
-          autorlink: data.author_url,
-          titulo: titulocortado
-        } 
-        
-      
-  
-       const existe = consultaPost?.content?.some(
-          item => item?.id === dataContent.id
-        ) || false;
-      
-        if (existe){
-          return res.status(201).json({ message: "El post ya contiene este contenido" });
-        }
+      const fetch = globalThis.fetch;
+      const apiUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(urlcode)}`;
+      const response = await fetch(apiUrl);
+      const data = await response.json();
 
+      const titulocortado = (data.title ?? '').slice(0, 120);
 
-       const updatedPost = await Post.findByIdAndUpdate(
-        postId,{
-                $push:{
-                  content: dataContent
-                }
-            },
-            {new: true}
-       );
+      const dataContent = {
+        platform: 'tiktok',
+        shareId: new Types.ObjectId().toString(),
+        id: idvideo[0],
+        urltik: urlcode,
+        tipo: arrayDeCadenas[4],
+        autor: data.author_name,
+        autorlink: data.author_url,
+        titulo: titulocortado
+      };
+
+      const updatedPost = await Post.findOneAndUpdate(
+        { _id: postId, 'content.id': { $ne: idvideo[0] } },
+        { $push: { content: dataContent } },
+        { new: true }
+      );
 
       if (!updatedPost) {
-        return res.status(404).json({ message: "Post no creado" });
+        return res.status(201).json({ message: "El post ya contiene este contenido" });
        }
 
       return res.status(200).json({
