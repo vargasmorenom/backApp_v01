@@ -136,6 +136,7 @@ app.use(apiVersion + "/admin/mail-queue", validaAdmin, require('./routes/admin/m
 
 // ── Rutas públicas sin reCAPTCHA ──────────────────────────────────────────────
 app.use(apiVersion + "/activacion",   require('./routes/auth/activacionRoutes'));
+app.use(apiVersion + "/google",       require('./routes/auth/googleAuthRoutes'));
 app.use(apiVersion + "/refresh",      refreshLimiter, require('./routes/auth/refreshTokenRoute'));
 app.use(apiVersion + "/getpost",      require('./routes/posts/getPostRoutes'));
 app.use(apiVersion + "/getonepost",   require('./routes/posts/getOnePostRoutes'));
