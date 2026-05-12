@@ -24,7 +24,7 @@ router.get("/", async (req,res) => {
 
         const items = await Posted.find()
         .populate('profileId','chanelName profilePic')
-        .sort({ likes:-1 })
+        .sort({ likes: -1, _id: -1 })
         .skip(skip)
         .limit(limit)
         .exec();
