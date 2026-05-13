@@ -1,7 +1,9 @@
 const express = require('express');
-const followed = require('../../models/followedSchema');
+const followers = require('../../models/followersSchema');
 const router = express.Router();
 
+// GET /api/v1/getfollowerslist?profileid=<id>
+// Retorna la lista de perfiles que siguen a profileid
 router.get("/", async (req, res) => {
     const { profileid } = req.query;
 
@@ -10,16 +12,16 @@ router.get("/", async (req, res) => {
     }
 
     try {
-        const list = await followed
+        const list = await followers
             .find({ idprofile: profileid })
-            .populate('following', 'chanelName profilePic description userBy')
+            .populate('followedby', 'chanelName profilePic description userBy')
             .sort({ createdAt: -1 });
 
-        const profiles = list.map(f => f.following).filter(Boolean);
+        const profiles = list.map(f => f.followedby).filter(Boolean);
         return res.json(profiles);
 
     } catch (error) {
-        console.error("Error al obtener lista de siguiendo:", error);
+        console.error("Error al obtener lista de seguidores:", error);
         return res.status(500).json({ error: "Error interno del servidor" });
     }
 });

@@ -142,8 +142,9 @@ app.use(apiVersion + "/getpost",      require('./routes/posts/getPostRoutes'));
 app.use(apiVersion + "/getonepost",   require('./routes/posts/getOnePostRoutes'));
 app.use(apiVersion + "/getpostid",    require('./routes/posts/getPostIdRoutes'));
 app.use(apiVersion + "/getprofile",   require('./routes/profile/getProfileRoutes'));
-app.use(apiVersion + "/getfollow",         require('./routes/social/GetFollowRoutes'));
+app.use(apiVersion + "/getfollow",          require('./routes/social/GetFollowRoutes'));
 app.use(apiVersion + "/getfollowinglist",  require('./routes/social/GetFollowingListRoutes'));
+app.use(apiVersion + "/getfollowerslist",  require('./routes/social/GetFollowersListRoutes'));
 app.use(apiVersion + "/profilelikes", require('./routes/social/LikeProfileRoutes').router || require('./routes/social/LikeProfileRoutes'));
 app.use(apiVersion + "/getLikes",     require('./routes/social/getLikeStatusRoutes'));
 app.use(apiVersion + "/postsbytag",   require('./routes/posts/getPostsByTagRoutes'));
@@ -200,6 +201,7 @@ const protectedRoutes = [
     { path: apiVersion + "/addfollow",          router: require('./routes/social/FollowAddRoutes') },
     { path: apiVersion + "/getfollow",           router: require('./routes/social/GetFollowRoutes') },
     { path: apiVersion + "/getfollowinglist",   router: require('./routes/social/GetFollowingListRoutes') },
+    { path: apiVersion + "/getfollowerslist",   router: require('./routes/social/GetFollowersListRoutes') },
     { path: apiVersion + "/fallowers",          router: require('./routes/social/SubscribeUserRoutes') },
 
     // Perfil
