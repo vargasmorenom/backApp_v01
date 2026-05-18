@@ -1,5 +1,6 @@
 const Post = require('../../models/PostSchema');
 const LikeRecord = require('../../models/LikesPostSchema');
+const sseManager = require('../sse/sseManager');
 
 function likePost(io, socket) {
      console.log("likespost");
@@ -43,13 +44,17 @@ function likePost(io, socket) {
 
             const updatedPost = await Post.findById(idPost, 'likeNumber');
 
-            // Emitir a TODOS los clientes
-            io.emit('like:updated', {
+            const likePayload = {
                 postId: idPost,
                 newLikeCount: updatedPost.likeNumber,
                 userId: idUser,
                 action
-            });
+            };
+
+            // Socket.io (clientes con WebSocket activo)
+            io.emit('like:updated', likePayload);
+            // SSE (fallback para Chrome mobile y otros)
+            sseManager.broadcast('like:updated', likePayload);
 
         } catch (error) {
             console.error("Error en likePost socket:", error.name, error.message);

@@ -145,6 +145,7 @@ app.use(apiVersion + "/getpost",      require('./routes/posts/getPostRoutes'));
 app.use(apiVersion + "/getonepost",   require('./routes/posts/getOnePostRoutes'));
 app.use(apiVersion + "/getpostid",    require('./routes/posts/getPostIdRoutes'));
 app.use(apiVersion + "/getprofile",   require('./routes/profile/getProfileRoutes'));
+app.use(apiVersion + "/events",             require('./routes/events/sseRoutes'));
 app.use(apiVersion + "/getfollow",          require('./routes/social/GetFollowRoutes'));
 app.use(apiVersion + "/getfollowinglist",  require('./routes/social/GetFollowingListRoutes'));
 app.use(apiVersion + "/getfollowerslist",  require('./routes/social/GetFollowersListRoutes'));

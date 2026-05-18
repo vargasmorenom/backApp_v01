@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 const ViewPost = require('../../models/viewPost');
 const Post = require('../../models/PostSchema');
+const sseManager = require('../../libs/sse/sseManager');
 
 router.put("/", async (req, res) => {
     try {
@@ -45,6 +46,8 @@ router.put("/", async (req, res) => {
             }
 
         }
+
+        sseManager.broadcast('view:updated', { idPost, viewCount: viewRecord.viewCount });
 
         return res.status(200).json({
             message: "Vista procesada correctamente",
