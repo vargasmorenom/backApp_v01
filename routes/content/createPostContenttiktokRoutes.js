@@ -10,7 +10,7 @@ router.put("/", async (req, res) => {
     try {
 
 
-      const { postId, url, typePost } = req.body;
+      const { postId, url, typePost, titulo: tituloFront } = req.body;
 
       let urlcode = url;
      const tiktokRegex = /^https?:\/\/(www\.|vm\.|vt\.)?tiktok\.com\/((@[a-zA-Z0-9_.-]+\/video\/\d+)|([a-zA-Z0-9]+\/))(\?.*)?$/;
@@ -47,7 +47,7 @@ router.put("/", async (req, res) => {
       const response = await fetch(apiUrl);
       const data = await response.json();
 
-      const titulocortado = (data.title ?? '').slice(0, 120);
+      const titulocortado = (data.title || '').slice(0, 60);
 
       const dataContent = {
         platform: 'tiktok',
@@ -57,7 +57,8 @@ router.put("/", async (req, res) => {
         tipo: arrayDeCadenas[4],
         autor: data.author_name,
         autorlink: data.author_url,
-        titulo: titulocortado
+        titulo: tituloFront,
+        titulocortado: titulocortado,
       };
 
       const updatedPost = await Post.findOneAndUpdate(

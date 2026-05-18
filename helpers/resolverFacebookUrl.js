@@ -18,7 +18,7 @@ async function resolveFacebookUrl(shortUrl) {
       return null;
     }
   } catch (error) {
-    if (error.response && error.response.status === 301 || error.response.status === 302) {
+    if (error.response && (error.response.status === 301 || error.response.status === 302)) {
       return error.response.headers.location;
     }
     console.error('Error al resolver la URL:', error.message);

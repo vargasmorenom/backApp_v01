@@ -14,7 +14,7 @@ router.put("/", async (req, res) => {
       const { postId, url, typePost, titulo } = req.body;
       let urlcode;
 
-      const regex = /^(https?:\/\/)?(www\.|m\.|mobile\.|mbasic\.|mtouch\.|web\.)?(facebook|fb)\.(com|me)(\/.*)?$/;
+      const regex = /^(https?:\/\/)?(www\.|m\.|mobile\.|mbasic\.|mtouch\.|web\.)?(facebook|fb)\.(com|me|watch)(\/.*)?$/;
 
       // Validar que se recibieron los datos necesarios
       if (!postId || !url || !typePost) {
@@ -53,44 +53,37 @@ router.put("/", async (req, res) => {
        const consultaPostContent = await Post.findById(postId);
       
       // // Verificar si el contenido ya existe en el post
-      if(dataContent){
+      if (!dataContent) {
+        return res.status(400).json({ message: "No se pudo procesar el contenido de Facebook" });
+      }
 
       const existe = consultaPostContent?.content?.some(
-          item => item?.listas?.id === dataContent.id
-        ) || false;
-      
-        if (existe){
-          return res.status(201).json({ message: "El post ya contiene este contenido" });
-        }
-      
+        item => item?.listas?.id === dataContent.id
+      ) || false;
+
+      if (existe) {
+        return res.status(201).json({ message: "El post ya contiene este contenido" });
+      }
 
       const contenidoPost = {
-            platform: 'facebook',
-            shareId: new Types.ObjectId().toString(),
-            titulo: titulo || null,
-            listas: dataContent,
-        };
-      
-     // Actualizar el post con el nuevo contenido
+        platform: 'facebook',
+        shareId: new Types.ObjectId().toString(),
+        titulo: titulo || null,
+        listas: dataContent,
+      };
+
       const updatedPost = await Post.findByIdAndUpdate(
-        postId,{
-                $push:{
-                  content: contenidoPost
-                }
-            },
-            {new: true}
-       );
+        postId,
+        { $push: { content: contenidoPost } },
+        { new: true }
+      );
 
       if (!updatedPost) {
         return res.status(404).json({ message: "Post no creado" });
-       }
-
-      return res.status(200).json({
-        message: "Contenido agregado correctamente al Post",
-     
-      });
-
       }
+
+      return res.status(200).json({ message: "Contenido agregado correctamente al Post" });
+
     } catch (error) {
       console.error("Error al crear el Post:", error);
       return res.status(500).json({ message: "Error interno del servidor" });

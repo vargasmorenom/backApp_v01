@@ -29,6 +29,9 @@ Thumbs.db
 npm-debug.log*
 yarn-error.log*
 
+# Tareas locales
+TAREAS.txt
+
 # Scripts de seed
 scripts/seedUsers.js
 scripts/deleteSeededUsers.js
