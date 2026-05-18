@@ -42,7 +42,7 @@ router.post("/", async (req, res) => {
 
         const io = req.app.get('socketio');
         if (io) {
-            io.emit('follow:updated', {
+            io.to(`user:${idprofile}`).emit('follow:updated', {
                 idprofile,
                 followerid,
                 countFollowers,

@@ -75,6 +75,9 @@ const corsOptions = {
 
 const io = new Server(httpServer, {
   cors: { ...corsOptions, origin: allowedOrigins },
+  transports: ['websocket', 'polling'],
+  pingTimeout: 60000,
+  pingInterval: 25000,
 });
 
 // Guardar io en app para usarlo en rutas
