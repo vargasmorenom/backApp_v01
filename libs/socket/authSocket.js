@@ -16,17 +16,27 @@ function parseCookies(cookieHeader) {
 async function authSocket(socket, next) {
     try {
         const cookies = parseCookies(socket.handshake.headers.cookie);
+        const authToken = socket.handshake.auth?.token;
 
-        if (!cookies.AuthToken) {
-            console.warn('[authSocket] Conexión rechazada - sin cookie AuthToken. Socket:', socket.id);
-            return next(new Error('No autorizado. No se encontró sesión.'));
+        // Sin ninguna credencial: permitir conexión anónima (solo eventos públicos)
+        if (!cookies.AuthToken && !authToken) {
+            console.warn('[authSocket] Conexión anónima. Socket:', socket.id);
+            socket.data.user = null;
+            return next();
         }
 
-        const sessionData = await decompressBase64(cookies.AuthToken);
-        const { token } = sessionData;
+        let token;
+        if (cookies.AuthToken) {
+            const sessionData = await decompressBase64(cookies.AuthToken);
+            token = sessionData.token;
+        } else {
+            // Fallback: token directo desde handshake.auth (Chrome mobile)
+            token = authToken;
+        }
 
         if (!token) {
-            return next(new Error('Token no proporcionado.'));
+            socket.data.user = null;
+            return next();
         }
 
         const decoded = jwt.verify(token, JWT_SECRET);
@@ -36,9 +46,13 @@ async function authSocket(socket, next) {
 
     } catch (error) {
         if (error.name === 'TokenExpiredError') {
-            return next(new Error('Sesión expirada. Refresca tu sesión e intenta de nuevo.'));
+            console.warn('[authSocket] Token expirado. Socket:', socket.id);
+            socket.data.user = null;
+            return next();
         }
-        return next(new Error('Token inválido o error de autenticación.'));
+        console.warn('[authSocket] Token inválido. Socket:', socket.id, error.message);
+        socket.data.user = null;
+        return next();
     }
 }
 

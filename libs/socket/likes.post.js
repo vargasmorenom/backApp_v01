@@ -8,7 +8,11 @@ function likePost(io, socket) {
         console.log('[likePost] Evento recibido. data:', data, '| user:', socket.data.user?._id);
         try {
             const { idPost } = data;
-            const idUser = socket.data.user._id;
+            const idUser = socket.data.user?._id;
+
+            if (!idUser) {
+                return socket.emit('like:error', { error: 'No autorizado' });
+            }
             console.log('[likePost] Procesando like para postId:', idPost, 'por userId:', idUser);
 
             if (!idPost) {
