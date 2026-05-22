@@ -18,7 +18,7 @@ router.get("/", async (req,res) => {
 
     try{
         const items = await Posted.find({ postedBy: id })
-        .sort({ likes:-1 })
+        .sort({ likeNumber: -1, _id: -1 })
         .skip(skip)
         .limit(limit)
         .exec();
