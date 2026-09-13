@@ -14,12 +14,13 @@ const router = express.Router();
 router.post("/", (req, res, next) => {
     upload.single('imagen')(req, res, (err) => {
         if (err) {
-            const msg = err.code === 'LIMIT_FILE_SIZE'
-                ? 'La imagen no debe superar 2 MB.'
-                : err.code === 'LIMIT_FILE_TYPE'
-                ? 'Solo se permiten imágenes JPG o PNG.'
-                : 'Error al procesar la imagen.';
-            return res.status(400).json({ message: msg });
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                return res.status(413).json({ message: 'La imagen no debe superar 2 MB.' });
+            }
+            if (err.code === 'LIMIT_FILE_TYPE') {
+                return res.status(400).json({ message: 'Solo se permiten imágenes JPG o PNG.' });
+            }
+            return res.status(400).json({ message: 'Error al procesar la imagen.' });
         }
         next();
     });
@@ -41,15 +42,25 @@ router.post("/", (req, res, next) => {
         forKids,
       } = req.body;
 
-      if (!name || !typePost || !access || !postedBy) {
-        return res.status(400).json({ message: "Faltan campos obligatorios" });
+      const camposFaltantes = [];
+      if (!name) camposFaltantes.push("name");
+      if (!typePost) camposFaltantes.push("typePost");
+      if (!access) camposFaltantes.push("access");
+      if (!postedBy) camposFaltantes.push("postedBy");
+      if (!chanelName) camposFaltantes.push("chanelName");
+
+      if (camposFaltantes.length > 0) {
+        return res.status(400).json({
+          message: `Faltan campos obligatorios: ${camposFaltantes.join(", ")}`,
+          camposFaltantes,
+        });
       }
-    
-      const postName = await Post.findOne({name:name});
+
+      const postName = await Post.findOne({ name: name });
 
       //validacion que el nombre no exista en el contendio del mismo creador
       if (postName) {
-        return res.status(207).json({ message: "Ya tienes un contenido con este nombre"});
+        return res.status(409).json({ message: "Ya tienes un contenido con este nombre" });
       }
      
       // validacion de los tags
@@ -93,11 +104,17 @@ router.post("/", (req, res, next) => {
       const filePath = req.file.path;
       const namePicture = cutTitle(req.file.filename);
 
-      await Promise.all([
-        helperImg(filePath, `640-${namePicture}`, 'small', 'fit', 'landscape'),
-        helperImg(filePath, `1280-${namePicture}`, 'medium', 'fit', 'landscape'),
-        helperImg(filePath, `1920-${namePicture}`, 'large', 'fit', 'landscape'),
-      ]);
+      try {
+        await Promise.all([
+          helperImg(filePath, `640-${namePicture}`, 'small', 'fit', 'landscape'),
+          helperImg(filePath, `1280-${namePicture}`, 'medium', 'fit', 'landscape'),
+          helperImg(filePath, `1920-${namePicture}`, 'large', 'fit', 'landscape'),
+        ]);
+      } catch (imgError) {
+        console.error("Error al procesar la imagen del post:", imgError);
+        fs.unlink(filePath).catch(e => console.warn('[upload] No se pudo eliminar temporal:', e.message));
+        return res.status(422).json({ message: "No se pudo procesar la imagen. Probá con otro archivo." });
+      }
 
       fs.unlink(filePath).catch(e => console.warn('[upload] No se pudo eliminar temporal:', e.message));
 
@@ -115,7 +132,7 @@ router.post("/", (req, res, next) => {
     }
 
     // Crear el Post
-      await Post.create({
+      const nuevoPost = await Post.create({
         name,
         description,
         typePost,
@@ -131,11 +148,21 @@ router.post("/", (req, res, next) => {
         forKIds: forKids === true || forKids === 'true',
       });
 
-      return res.status(200).json({
-        message: "Post creado correctamente"
+      return res.status(201).json({
+        message: "Post creado correctamente",
+        post: nuevoPost,
       });
-  
+
     } catch (error) {
+      if (error.name === "ValidationError") {
+        const errores = Object.values(error.errors).map(e => e.message);
+        console.error("Error de validación al crear el Post:", errores);
+        return res.status(400).json({ message: "Datos inválidos para crear el post", errores });
+      }
+      if (error.code === 11000) {
+        console.error("Error de duplicado al crear el Post:", error.keyValue);
+        return res.status(409).json({ message: "Ya existe un post con esos datos" });
+      }
       console.error("Error al crear el Post:", error);
       return res.status(500).json({ message: "Error interno del servidor" });
     }
