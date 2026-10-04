@@ -2,6 +2,7 @@ const express = require('express');
 const Post = require('../../models/PostSchema');
 const User = require('../../models/UserSchema');
 const LikeRecord = require('../../models/LikesPostSchema');
+const esUsuarioSesion = require('../../helpers/esUsuarioSesion');
 
 const router = express.Router();
 
@@ -10,6 +11,11 @@ router.post("/", async (req, res) => {
 
     if (!idPost || !idUser) {
         return res.status(400).json({ error: "idPost e idUser son requeridos" });
+    }
+
+    // Solo se puede dar like a nombre del usuario de la sesión
+    if (!esUsuarioSesion(req, idUser)) {
+        return res.status(403).json({ error: "No autorizado" });
     }
 
 

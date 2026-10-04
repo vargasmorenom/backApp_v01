@@ -5,6 +5,8 @@ const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs/promises');
 const Profile = require('../../models/ProfileSchema');
+const esUsuarioSesion = require('../../helpers/esUsuarioSesion');
+const esNombreArchivoSeguro = require('../../helpers/esNombreArchivoSeguro');
 
 const FILES_DIR = process.env.FILES_PATH || '/tmp/files';
 
@@ -18,7 +20,8 @@ if (!fsSync.existsSync(FILES_DIR)) {
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, FILES_DIR),
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
+    // La extensión sale del tipo validado, no del nombre que envía el cliente
+    const ext = { 'image/png': '.png', 'image/webp': '.webp' }[file.mimetype] || '.jpg';
     cb(null, `${Date.now()}${ext}`);
   }
 });
@@ -70,6 +73,12 @@ router.post('/', upload.single('imagen'), async (req, res) => {
       return res.status(400).json({ error: 'Faltan datos requeridos: userBy o usuario' });
     }
 
+    // Solo se puede cambiar la imagen del perfil del usuario de la sesión
+    if (!esUsuarioSesion(req, userId)) {
+      fs.unlink(filePath).catch(() => {});
+      return res.status(403).json({ error: 'No autorizado' });
+    }
+
     const profilePic = {
       small:   `60-${userId}.jpg`,
       medium:  `120-${userId}.jpg`,
@@ -82,7 +91,7 @@ router.post('/', upload.single('imagen'), async (req, res) => {
     if (oldProfile?.profilePic) {
       const oldFiles = ['small', 'medium', 'large', 'xlarge']
         .map(k => oldProfile.profilePic[k])
-        .filter(Boolean);
+        .filter(esNombreArchivoSeguro); // nunca borrar fuera de FILES_DIR
       await Promise.allSettled(
         oldFiles.map(f => fs.unlink(path.join(FILES_DIR, f)).catch(() => {}))
       );
@@ -109,6 +118,7 @@ router.post('/', upload.single('imagen'), async (req, res) => {
 
   } catch (err) {
     console.error('Error en subida de imagen:', err);
+    if (req.file) fs.unlink(req.file.path).catch(() => {});
 
     if (err instanceof multer.MulterError) {
       return res.status(400).json({ error: `Error de Multer: ${err.message}` });

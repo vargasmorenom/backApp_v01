@@ -20,7 +20,10 @@ router.post("/", async (req, res) => {
             terms,
         } = req.body;
 
-        if (!username || !email || !password || terms !== true) {
+        // Los tres deben ser texto: un objeto se interpretaría como operador de Mongo
+        const sonTexto = [username, email, password].every(v => typeof v === 'string');
+
+        if (!sonTexto || !username || !email || !password || terms !== true) {
             return res.status(400).json({ message: "Faltan campos obligatorios o no se aceptaron los términos." });
         }
 

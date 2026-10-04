@@ -6,12 +6,13 @@ const { enviarCorreoBienvenida } = require('../../helpers/mailLibs');
 const router = express.Router();
 
 router.put("/", async (req, res) => {
-
-     console.log(req.body);
     try {
       const { token, username } = req.body;
 
-     
+      // Deben ser texto: un objeto se interpretaría como operador de Mongo
+      if (typeof token !== 'string' || typeof username !== 'string') {
+        return res.status(400).json({ message: "Los datos no son correctos" });
+      }
 
       const user = await User.findOne({ token }) || null;
 
@@ -59,7 +60,8 @@ router.put("/", async (req, res) => {
       return res.status(200).json(resultado);
 
     } catch (error) {
-      return res.status(500).json({ message: error.message });
+      console.error("Error en activación:", error.message);
+      return res.status(500).json({ message: "Error interno del servidor" });
     }
   });
 

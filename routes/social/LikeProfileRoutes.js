@@ -1,6 +1,8 @@
 const express = require('express');
 const profile = require('../../models/ProfileSchema');
 const likeProfile = require('../../models/LikesProfileSchema');
+const validaToken = require('../../middlewares/validaToken');
+const esUsuarioSesion = require('../../helpers/esUsuarioSesion');
 const router = express.Router();
 
 router.get("/", async (req, res) => {
@@ -20,9 +22,15 @@ router.get("/", async (req, res) => {
     }
 });
 
-router.post("/", async (req, res) => {
+// El router se monta en el bloque público por el GET; el POST exige sesión aquí
+router.post("/", validaToken, async (req, res) => {
     
     const { idprofile, idprofileLike} = req.body;
+
+    // Solo se puede dar like a nombre del usuario de la sesión
+    if (idprofileLike && !esUsuarioSesion(req, idprofileLike)) {
+        return res.status(403).json({ error: "No autorizado" });
+    }
 
     if (!idprofile || !idprofileLike) {
         return res.status(400).json({ error: "idprofile e idprofileLike son requeridos" });

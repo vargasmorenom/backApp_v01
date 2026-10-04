@@ -1,6 +1,7 @@
 const express = require('express');
 const User = require('../../models/UserSchema');
 const Profile = require('../../models/ProfileSchema');
+const esUsuarioSesion = require('../../helpers/esUsuarioSesion');
 
 const router = express.Router();
 
@@ -41,6 +42,11 @@ router.post("/", async (req, res) => {
       }
   
       // Verificar si el usuario existe
+      // Solo se puede crear el perfil del usuario de la sesión
+      if (!esUsuarioSesion(req, userBy)) {
+        return res.status(403).json({ message: "No autorizado" });
+      }
+
       const user = await User.findById(userBy);
     
       if (!user) {

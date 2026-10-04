@@ -29,7 +29,7 @@ function emailTemplate({ username, mensaje, codigo, cta_url, cta_texto, tipo = '
 
           <tr>
             <td style="padding:36px 40px;">
-              <h2 style="margin:0 0 12px;color:#111827;font-size:22px;">${badge ? badge + ' ' : ''}Hola, ${username} 👋</h2>
+              <h2 style="margin:0 0 12px;color:#111827;font-size:22px;">${badge ? badge + ' ' : ''}Hola, ${String(username).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))} 👋</h2>
               <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.6;">${mensaje}</p>
 
               ${codigo ? `

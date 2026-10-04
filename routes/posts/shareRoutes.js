@@ -36,8 +36,9 @@ router.get('/:id', async (req, res) => {
         const imgWidth  = rawImg ? '1280' : '737';
         const imgHeight = rawImg ? '960'  : '314';
 
-        const title       = (post.name || 'mylistys').replace(/"/g, '&quot;');
-        const description = (post.description || post.typePostName || 'Descubre contenido en mylistys').slice(0, 200).replace(/"/g, '&quot;');
+        const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const title       = escapeHtml(post.name || 'mylistys');
+        const description = escapeHtml((post.description || post.typePostName || 'Descubre contenido en mylistys').slice(0, 200));
         const canonicalUrl = `${appUrl}/share/${req.params.id}`;
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.send(`<!DOCTYPE html>

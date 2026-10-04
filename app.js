@@ -20,6 +20,7 @@ require("./config/database");
 const validaToken = require("./middlewares/validaToken");
 const verifyRecaptcha = require("./middlewares/verifyRecaptcha");
 const validaAdmin = require("./middlewares/validaAdmin");
+const validaDuenoPost = require("./middlewares/validaDuenoPost");
 const { recuperarPendientes, iniciarPoller } = require("./helpers/mailLibs");
 
 const helmet = require('helmet');
@@ -45,6 +46,14 @@ const refreshLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutos
     max: 30,
     message: { error: 'Demasiadas solicitudes de refresco de sesión.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const recoveryLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 10,
+    message: { error: 'Demasiadas solicitudes de recuperación. Intenta de nuevo en 15 minutos.' },
     standardHeaders: true,
     legacyHeaders: false,
 });
@@ -115,7 +124,7 @@ app.use('/images', staticHeaders, express.static(path.join(__dirname, 'images'))
 app.use('/static', staticHeaders, express.static(path.join(__dirname, 'static')));
 
 app.use(session({
-    secret: process.env.SESSION_SECRET || "salida en codigo",
+    secret: process.env.SESSION_SECRET || require('crypto').randomBytes(32).toString('hex'),
     resave: true,
     saveUninitialized: false
 }));
@@ -127,6 +136,9 @@ const logger = winston.createLogger({
         new winston.transports.File({ filename: 'combined.log' })
     ]
 });
+
+// Los JWT que llegan por query (SSE en /events) no deben quedar en los logs
+morgan.token('url', req => (req.originalUrl || req.url).replace(/([?&]token=)[^&]+/, '$1[oculto]'));
 
 app.use(morgan('combined', { stream: { write: message => logger.info(message) } }));
 
@@ -141,6 +153,7 @@ app.use(apiVersion + "/admin/mail-queue", validaAdmin, require('./routes/admin/m
 app.use(apiVersion + "/activacion",   require('./routes/auth/activacionRoutes'));
 app.use(apiVersion + "/google",       require('./routes/auth/googleAuthRoutes'));
 app.use(apiVersion + "/refresh",      refreshLimiter, require('./routes/auth/refreshTokenRoute'));
+app.use(apiVersion + "/logout",       require('./routes/auth/logoutRoutes'));
 app.use(apiVersion + "/getpost",      require('./routes/posts/getPostRoutes'));
 app.use(apiVersion + "/getonepost",   require('./routes/posts/getOnePostRoutes'));
 app.use(apiVersion + "/getpostid",    require('./routes/posts/getPostIdRoutes'));
@@ -161,18 +174,23 @@ app.use('/share',                     require('./routes/posts/shareRoutes'));
 // ── Rutas públicas con reCAPTCHA ──────────────────────────────────────────────
 app.use(apiVersion + "/register",   registerLimiter, verifyRecaptcha, require('./routes/auth/registerRoutes'));
 app.use(apiVersion + "/login",      loginLimiter,    verifyRecaptcha, require('./routes/auth/loginRoutes'));
-app.use(apiVersion + "/recovery",   verifyRecaptcha, require('./routes/auth/recoveryRoutes'));
+app.use(apiVersion + "/recovery",   recoveryLimiter, verifyRecaptcha, require('./routes/auth/recoveryRoutes'));
 
 // ── Middleware de autenticación global ────────────────────────────────────────
 app.use(apiVersion, validaToken);
 
 // ── Rutas protegidas (requieren sesión válida) ────────────────────────────────
+// Solo el dueño de la lista puede borrarla o cambiar su contenido
+app.use(
+    [apiVersion + "/content", apiVersion + "/deletepost", apiVersion + "/deletecontent"],
+    validaDuenoPost
+);
+
 const protectedRoutes = [
     // Auth
     { path: apiVersion + "/changepassword",     router: require('./routes/auth/changePasswordRoutes') },
 
     // Posts
-    { path: apiVersion + "/posted",             router: require('./routes/posts/postRoutes') },
     { path: apiVersion + "/newpost",            router: require('./routes/posts/createPostRoutes') },
     { path: apiVersion + "/getpost",            router: require('./routes/posts/getPostRoutes') },
     { path: apiVersion + "/getonepost",         router: require('./routes/posts/getOnePostRoutes') },
@@ -206,7 +224,6 @@ const protectedRoutes = [
     { path: apiVersion + "/getfollow",           router: require('./routes/social/GetFollowRoutes') },
     { path: apiVersion + "/getfollowinglist",   router: require('./routes/social/GetFollowingListRoutes') },
     { path: apiVersion + "/getfollowerslist",   router: require('./routes/social/GetFollowersListRoutes') },
-    { path: apiVersion + "/fallowers",          router: require('./routes/social/SubscribeUserRoutes') },
 
     // Perfil
     { path: apiVersion + "/profile",            router: require('./routes/profile/profileRoutes') },
@@ -218,6 +235,11 @@ const protectedRoutes = [
     { path: apiVersion + "/getuser",            router: require('./routes/profile/getUserRoutes') },
 ];
 protectedRoutes.forEach(route => app.use(route.path, route.router));
+
+// Un error asíncrono sin capturar en una ruta no debe tumbar el servidor
+process.on('unhandledRejection', (reason) => {
+    logger.error(`unhandledRejection: ${reason?.stack || reason}`);
+});
 
 httpServer.listen(process.env.PORT || 8080, () => {
     console.log('Servidor iniciado en el puerto:' + (process.env.PORT || 8080));

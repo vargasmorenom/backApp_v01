@@ -6,6 +6,7 @@ const fs = require('fs/promises');
 
 const Post = require('../../models/PostSchema');
 const TagsPost = require('../../models/TagsPost');
+const esUsuarioSesion = require('../../helpers/esUsuarioSesion');
 
 
 const router = express.Router();
@@ -54,6 +55,12 @@ router.post("/", (req, res, next) => {
           message: `Faltan campos obligatorios: ${camposFaltantes.join(", ")}`,
           camposFaltantes,
         });
+      }
+
+      // Solo se puede publicar a nombre del usuario de la sesión
+      if (!esUsuarioSesion(req, postedBy)) {
+        if (req.file) fs.unlink(req.file.path).catch(() => {});
+        return res.status(403).json({ message: "No autorizado" });
       }
 
       const postName = await Post.findOne({ name: name });

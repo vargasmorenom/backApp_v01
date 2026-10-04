@@ -48,6 +48,10 @@ const userSchema = new Schema({
         type: String,
         default: null,
     },
+    resetCodeAttempts: {
+        type: Number,
+        default: 0,
+    },
     resetCodeExpiry: {
         type: Date,
         default: null,

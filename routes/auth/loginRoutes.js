@@ -17,7 +17,8 @@ router.post("/", async (req, res) => {
 
     const { username, password } = req.body;
 
-    if (!username || !password) {
+    // Deben ser texto: un objeto se interpretaría como operador de Mongo
+    if (!username || !password || typeof username !== 'string' || typeof password !== 'string') {
         return res.status(400).json({ error: "Username and password are required." });
     }
 
@@ -27,10 +28,6 @@ router.post("/", async (req, res) => {
 
     if (!user) {
         return res.status(401).json({ error: "Invalid login credentials." });
-    }
-
-    if (user.state === false) {
-        return res.status(403).json({ message: "El usuario no está activo. Se ha enviado un correo a " + user.email + " para la activación de su cuenta." });
     }
 
     // Compatibilidad: acepta contraseña en claro (nuevo) o cifrada con AES (legacy frontend)
@@ -47,6 +44,11 @@ router.post("/", async (req, res) => {
     const isMatch = await bcrypt.compare(plainPassword, user.password);
     if (!isMatch) {
         return res.status(401).json({ error: "Invalid login credentials." });
+    }
+
+    // Después de validar la contraseña: así no se revela el correo a quien no la conoce
+    if (user.state === false) {
+        return res.status(403).json({ message: "El usuario no está activo. Se ha enviado un correo a " + user.email + " para la activación de su cuenta." });
     }
 
     const refreshToken = await adminTokens(user._id, REFRESH_TOKEN_TTL, null, JWT_SECRET);

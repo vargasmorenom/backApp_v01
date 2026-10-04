@@ -24,6 +24,15 @@ router.post("/", async (req, res) => {
 
         const existingFollow = await followers.findOne({ idprofile, followedby: followerid });
 
+        // El seguidor debe ser el perfil de la sesión; el dueño del perfil solo puede quitar a un seguidor
+        const miPerfil = await profile.findOne({ userBy: req.user?._id }).select('_id').lean();
+        const miPerfilId = miPerfil ? String(miPerfil._id) : null;
+        const esSeguidor = miPerfilId !== null && followerid === miPerfilId;
+        const quitaSeguidor = miPerfilId !== null && idprofile === miPerfilId && !!existingFollow;
+        if (!esSeguidor && !quitaSeguidor) {
+            return res.status(403).json({ error: "No autorizado" });
+        }
+
         let action;
 
         if (existingFollow) {

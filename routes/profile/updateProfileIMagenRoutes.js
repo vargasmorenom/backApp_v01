@@ -1,6 +1,8 @@
 const express = require('express');
 const User = require('../../models/UserSchema');
 const Profile = require('../../models/ProfileSchema');
+const esUsuarioSesion = require('../../helpers/esUsuarioSesion');
+const esNombreArchivoSeguro = require('../../helpers/esNombreArchivoSeguro');
 
 const router = express.Router();
 
@@ -18,6 +20,20 @@ router.put("/", async (req, res) => {
     }
 
     // Verificar si el usuario existe
+    // Solo se puede editar el perfil del usuario de la sesión
+    if (!esUsuarioSesion(req, userBy)) {
+      return res.status(403).json({ message: "No autorizado" });
+    }
+
+    // profilePic solo admite nombres de archivo simples o URLs https: luego se usan para borrar archivos
+    const TAMANOS = ['small', 'medium', 'large', 'xlarge'];
+    const picValida = typeof profilePic === 'object' && !Array.isArray(profilePic)
+      && Object.keys(profilePic).every(k => TAMANOS.includes(k))
+      && Object.values(profilePic).every(v => esNombreArchivoSeguro(v) || (typeof v === 'string' && /^https:\/\/\S+$/.test(v)));
+    if (!picValida) {
+      return res.status(400).json({ message: "profilePic no es válido" });
+    }
+
     const user = await User.findById(userBy);
     if (!user) {
       return res.status(404).json({ message: "El usuario no existe" });

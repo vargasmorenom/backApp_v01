@@ -15,7 +15,7 @@ router.get("/", async (req,res) => {
 
         if(!idPost){
         
-            res.status(401).json({message:"Hace falta el parametro Id"}); 
+            return res.status(401).json({message:"Hace falta el parametro Id"});
             
         }
     
@@ -35,7 +35,8 @@ router.get("/", async (req,res) => {
         res.status(200).json(result);
 
     }catch(error){
-        res.status(500).json({message: error.message })
+        console.error("Error en getonepost:", error.message);
+        res.status(500).json({ message: "Error interno del servidor" })
     }
          
 });

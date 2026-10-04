@@ -11,7 +11,7 @@ router.get("/", async (req, res) => {
         let limit = parseInt(req.query.limit) || 10;
         const searchTerm = req.query.q;
 
-        if (!searchTerm) {
+        if (!searchTerm || typeof searchTerm !== 'string' || searchTerm.length > 100) {
             return res.status(400).json({ message: "El término de búsqueda (q) es obligatorio" });
         }
 
@@ -21,7 +21,8 @@ router.get("/", async (req, res) => {
 
         const skip = (page - 1) * limit;
 
-        const regex = new RegExp(searchTerm, 'i');
+        // Se escapan los metacaracteres: el término se busca como texto literal
+        const regex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
 
         const [posts, channels] = await Promise.all([
             Post.find(

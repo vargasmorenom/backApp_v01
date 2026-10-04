@@ -37,7 +37,8 @@ const validaToken = async (req, res, next) => {
                 const sessionData = await decompressBase64(req.cookies.AuthToken);
                 const { valida } = sessionData;
 
-                if (!valida) {
+                // Debe ser un string: un objeto ({"$ne":null}) se interpretaría como operador de Mongo
+                if (!valida || typeof valida !== 'string') {
                     return res.status(401).json({ auth: false, message: "Token expirado y sin credencial de renovación." });
                 }
 

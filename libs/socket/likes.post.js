@@ -64,7 +64,7 @@ function likePost(io, socket) {
             if (error.code === 11000) {
                 return socket.emit('like:error', { error: 'Like duplicado' });
             }
-            socket.emit('like:error', { error: 'Error al procesar like', detail: error.message });
+            socket.emit('like:error', { error: 'Error al procesar like' });
         }
     });
 }

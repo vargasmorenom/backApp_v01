@@ -7,6 +7,7 @@ const fs = require('fs/promises');
 const Post = require('../../models/PostSchema');
 const TagsPost = require('../../models/TagsPost');
 const cutTitle = require('../../helpers/limpiarTituloImagenes');
+const esNombreArchivoSeguro = require('../../helpers/esNombreArchivoSeguro');
 
 
 const FILES_DIR = process.env.FILES_PATH || '/files';
@@ -20,7 +21,8 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+    // La extensión sale del tipo validado, no del nombre que envía el cliente
+    cb(null, uniqueSuffix + (file.mimetype === 'image/png' ? '.png' : '.jpg'));
   }
 });
 
@@ -117,6 +119,12 @@ router.put("/",upload.single('imagen'), async (req, res) => {
         return res.status(204).json({ message: "El post no existe" });
       }
 
+      // Solo el dueño de la lista puede editarla
+      if (String(postData.postedBy) !== String(req.user?._id)) {
+        if (req.file) await fs.unlink(req.file.path).catch(() => {});
+        return res.status(403).json({ message: "No autorizado" });
+      }
+
       // Procesamiento de tags (misma lógica que en createPostRoutes)
       let processedTags;
       if (tags) {
@@ -158,7 +166,9 @@ router.put("/",upload.single('imagen'), async (req, res) => {
             // Eliminar imágenes antiguas del post
             const oldImagen = Array.isArray(postData.imagen) ? postData.imagen[0] : postData.imagen;
             if (oldImagen) {
-              const oldFiles = [oldImagen.small, oldImagen.medium, oldImagen.large].filter(f => typeof f === 'string');
+              const oldFiles = [oldImagen.small, oldImagen.medium, oldImagen.large]
+                // nunca borrar fuera de FILES_DIR ni la imagen por defecto compartida
+                .filter(f => esNombreArchivoSeguro(f) && !/-default\.jpg$/.test(f));
               await Promise.allSettled(
                 oldFiles.map(f => fs.unlink(path.join(FILES_DIR, f)).catch(() => {}))
               );

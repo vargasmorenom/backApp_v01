@@ -14,7 +14,12 @@ router.put('/', async (req, res) => {
       return res.status(400).json({ message: 'Faltan campos obligatorios.' });
     }
 
-    const decryptedActual = CryptoJS.AES.decrypt(passwordActual, ENCRYPT_KEY).toString(CryptoJS.enc.Utf8);
+    // Solo se puede cambiar la contraseña del usuario de la sesión
+    if (String(userBy) !== String(req.user?._id) || typeof passwordActual !== 'string' || typeof password !== 'string') {
+      return res.status(403).json({ message: 'No autorizado.' });
+    }
+
+    const decryptedActual =CryptoJS.AES.decrypt(passwordActual, ENCRYPT_KEY).toString(CryptoJS.enc.Utf8);
     const decryptedNew = CryptoJS.AES.decrypt(password, ENCRYPT_KEY).toString(CryptoJS.enc.Utf8);
 
     if (!decryptedActual || !decryptedNew) {

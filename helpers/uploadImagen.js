@@ -1,5 +1,4 @@
 const multer = require('multer');
-const path = require('path');
 
 const FILES_DIR = process.env.FILES_PATH || '/files';
 
@@ -11,7 +10,8 @@ const storage = multer.diskStorage({
   filename: function (req, file, cb) {
     console.log("upload");
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+    // La extensión sale del tipo validado, no del nombre que envía el cliente
+    cb(null, uniqueSuffix + (file.mimetype === 'image/png' ? '.png' : '.jpg'));
   }
 });
 
